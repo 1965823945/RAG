@@ -1,5 +1,8 @@
 name: CI
 
+env:
+  RUN_UI_HEADLESS: 'false'
+
 on:
   push:
     branches: [ master ]
@@ -40,7 +43,11 @@ jobs:
       - name: Run Phase 4 End-to-End Test
         run: python -m rag_minimal.Phase4.test_e2e
 
+      - name: Run Phase4 UI Simulation Tests
+        run: pytest -q rag_minimal/Phase4/test_ui_sim.py -q
+
       - name: Run Phase4 Headless UI Test (UI sanity)
+        if: ${{ env.RUN_UI_HEADLESS == 'true' }}
         run: pytest -q rag_minimal/Phase4/test_headless_ui.py -q
 
       - name: Run PyTest Coverage
