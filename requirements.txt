@@ -1,9 +1,9 @@
-- langchain
-- chromadb
-- PyPDF2
-- reportlab
-- streamlit
-- pytest
-- pytest-cov
-- requests
-- ruff
+langchain
+chromadb
+PyPDF2
+reportlab
+streamlit
+pytest
+pytest-cov
+requests
+ruff
