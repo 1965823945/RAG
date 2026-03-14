@@ -12,6 +12,14 @@ from langchain_community.vectorstores import Chroma
 CHROMA_DIR = "chromadb"
 PDFS_DIR = "docs/pdfs"
 
+# Compatibility: prefer langchain community Chroma if available
+try:
+    from langchain_community.vectorstores import Chroma as CommunityChroma
+    _CHROMA_USE_COMMUNITY = True
+except Exception:
+    _CHROMA_USE_COMMUNITY = False
+    from langchain.vectorstores import Chroma as CommunityChroma
+
 
 def ensure_dirs():
     Path(PDFS_DIR).mkdir(parents=True, exist_ok=True)
@@ -53,7 +61,14 @@ def build_vector_store(persist_dir: str = CHROMA_DIR) -> Chroma:
         print("No documents loaded. Ensure PDFs exist in docs/pdfs.")
         return None
     embeddings = FakeEmbeddings(size=1536)
-    vectordb = Chroma(persist_directory=persist_dir, embedding=embeddings)
+    # Instantiate vector store with compatibility across LangChain versions
+    if _CHROMA_USE_COMMUNITY:
+        try:
+            vectordb = CommunityChroma(persist_directory=persist_dir, embedding=embeddings)
+        except TypeError:
+            vectordb = CommunityChroma(persist_directory=persist_dir, embeddings=embeddings)
+    else:
+        vectordb = CommunityChroma(persist_directory=persist_dir, embedding=embeddings)
     vectordb.add_documents(docs)
     vectordb.persist()
     return vectordb
