@@ -26,3 +26,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def simulate_ui(user_input: str) -> str:
+    """Simulate a UI interaction by invoking the backend logic directly.
+    This provides a testable entry point for UI interaction without launching a browser.
+    """
+    return answer_question(user_input)
