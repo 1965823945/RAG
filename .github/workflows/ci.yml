@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest pytest-cov requests ruff
+
+      - name: Run Phase 1
+        run: python -m rag_minimal.Phase1.day1
+
+      - name: Run Phase 2
+        run: python -m rag_minimal.Phase2.day2
+
+      - name: Run Phase 3
+        run: python -m rag_minimal.Phase3.day3 --question "CI test"
+
+      - name: Run Phase 4 End-to-End Test
+        run: python -m rag_minimal.Phase4.test_e2e
+
+      - name: Run Phase4 Headless UI Test (UI sanity)
+        run: pytest -q rag_minimal/Phase4/test_headless_ui.py -q
+
+      - name: Run PyTest Coverage
+        run: |
+          pytest -q --cov=rag_minimal --cov-report=xml
+
+      - name: Static Analysis with Ruff
+        run: |
+          ruff check . --fix || true
+
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip

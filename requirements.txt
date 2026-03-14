@@ -3,3 +3,7 @@
 - PyPDF2
 - reportlab
 - streamlit
+- pytest
+- pytest-cov
+- requests
+- ruff
