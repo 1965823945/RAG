@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  ui:
+    build:
+      context: ./WorkSpace/RAG/private_demo_domain
+      dockerfile: Dockerfile
+    command: ["streamlit", "run", "private_demo_domain/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./WorkSpace/RAG/private_demo_domain:/app/private_demo_domain
+  api:
+    build:
+      context: ./WorkSpace/RAG/private_demo_domain
+      dockerfile: Dockerfile
+    command: ["uvicorn", "private_demo_domain.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./WorkSpace/RAG/private_demo_domain:/app/private_demo_domain

@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+rag_minimal/*.pyc
+chromadb/
+docs/pdfs/
+*.log
+*.tmp
+venv/
+env/
+*.venv
+venv*/
