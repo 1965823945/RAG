@@ -21,7 +21,8 @@ def day1_hello_world():
     llm = SimpleLLM()
     prompt = PromptTemplate(template="Say hi and describe what LangChain can do.", input_variables=[])
     chain = LLMChain(llm=llm, prompt=prompt)
-    result = chain.run()
+    # Use the newer invoke API for compatibility with LangChain 0.1.x
+    result = chain.invoke({})
     print(result)
     return result
 
