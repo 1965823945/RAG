@@ -17,7 +17,7 @@ How to run (local)
 - Phase1: python -m rag_minimal.Phase1.day1
 - Phase2: python -m rag_minimal.Phase2.day2
 - Phase3: python -m rag_minimal.Phase3.day3 --question "Your question here"
-- Phase4: streamlit run rag_minimal.Phase4.streamlit_app.py
+- Phase4: streamlit run rag_minimal/Phase4/streamlit_app.py
 - Phase5: docker build -t rag-minimal .  && docker run -p 8501:8501 rag-minimal
 
 Notes
