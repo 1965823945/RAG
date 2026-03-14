@@ -5,7 +5,7 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.vectorstores import Chroma
 from rag_minimal.utils import SimpleLLM, FakeEmbeddings
-from rag_minimal.day2 import CHROMA_DIR  # type: ignore
+from rag_minimal.Phase2.day2 import CHROMA_DIR  # type: ignore
 
 
 def answer_question(question: str, persist_dir: str = CHROMA_DIR) -> str:

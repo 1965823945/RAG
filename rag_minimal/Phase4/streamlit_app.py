@@ -1,8 +1,8 @@
-"""Day 4: Simple Streamlit UI to demo the RAG flow (question -> answer).
-This app relies on Day3's answer_question function for retrieval-based answers.
+"""Phase 4: Simple Streamlit UI to demo the RAG flow (question -> answer).
+This app relies on Phase3's answer_question function for retrieval-based answers.
 """
 import streamlit as st
-from rag_minimal.day3 import answer_question
+from rag_minimal.Phase3.day3 import answer_question
 
 
 def main():
