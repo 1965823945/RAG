@@ -1,5 +1,6 @@
 langchain
 langchain-community
+pypdf
 chromadb
 PyPDF2
 reportlab

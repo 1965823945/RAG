@@ -3,10 +3,10 @@ import os
 from pathlib import Path
 from glob import glob
 
-from langchain.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import FakeEmbeddings
-from langchain.vectorstores import Chroma
+from langchain_community.embeddings import FakeEmbeddings
+from langchain_community.vectorstores import Chroma
 
 
 CHROMA_DIR = "chromadb"
