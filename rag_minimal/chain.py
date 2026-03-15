@@ -49,7 +49,7 @@ def create_rag_chain(
         {"context": retriever | format_docs, "question": lambda x: x}
         | prompt
         | llm
-    )
+    ).with_config({"recursion_limit": 50})
     
     return chain
 

@@ -16,12 +16,12 @@ def main():
     pdf_dir = "docs/pdfs"
     vector_store_dir = "chroma_db"
     
-    print("\n[1/5] Loading PDFs...")
+    print("\n[1/5] Loading PDFs from static library...")
     docs = load_pdfs(pdf_dir)
     print(f"Loaded {len(docs)} document pages")
     
     if not docs:
-        print("No PDFs found. Please add PDFs to docs/pdfs or run generate_samples.py")
+        print("No PDFs found. Please add PDFs to docs/pdfs")
         return
     
     print("\n[2/5] Chunking documents...")
@@ -34,7 +34,7 @@ def main():
     print(f"Vector store created at {vector_store_dir}")
     
     print("\n[4/5] Setting up RAG chain...")
-    retriever = SimpleRetriever(vector_store=vector_store, k=4)
+    retriever = SimpleRetriever(vector_store=vector_store, k=3)
     llm = SimpleLLM()
     chain = create_rag_chain(llm=llm, retriever=retriever)
     print("RAG chain ready!")
