@@ -12,9 +12,6 @@ class SimpleLLM(BaseLLM):
     """
 
     @property
-    def _llm_type(self) -> str:
-        return "simple_llm"
-
     def _generate(
         self,
         prompts: List[str],
