@@ -1,13 +1,10 @@
 name: CI
 
-env:
-  RUN_UI_HEADLESS: 'false'
-
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
@@ -15,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,37 +26,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-          python -m pip install pytest pytest-cov requests ruff
 
-      - name: Run Phase 1
-        run: python -m rag_minimal.Phase1.day1
+      - name: Generate sample PDFs
+        run: python -m rag_minimal.generate_samples
 
-      - name: Run Phase 2
-        run: python -m rag_minimal.Phase2.day2
+      - name: Run main demo
+        run: python -m rag_minimal.main
 
-      - name: Run Phase 3
-        run: python -m rag_minimal.Phase3.day3 --question "CI test"
+      - name: Run tests
+        run: pytest -q --cov=rag_minimal --cov-report=xml
 
-      - name: Run Phase 4 End-to-End Test
-        run: python -m rag_minimal.Phase4.test_e2e
-
-      - name: Run Unified Phases PyTest
-        run: pytest -q rag_minimal/tests/test_all_phases.py -q
-
-      - name: Run Phase4 UI Simulation Tests
-        run: pytest -q rag_minimal/Phase4/test_ui_sim.py -q
-
-      - name: Run Phase4 Headless UI Test (UI sanity)
-        if: ${{ env.RUN_UI_HEADLESS == 'true' }}
-        run: pytest -q rag_minimal/Phase4/test_headless_ui.py -q
-
-      - name: Run PyTest Coverage
-        run: |
-          pytest -q --cov=rag_minimal --cov-report=xml
-
-      - name: Static Analysis with Ruff
-        run: |
-          ruff check . --fix || true
+      - name: Static analysis
+        run: ruff check rag_minimal/ --fix
 
       - name: Cache pip
         uses: actions/cache@v3
