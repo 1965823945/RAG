@@ -6,14 +6,14 @@ from rag_minimal.llm import SimpleLLM
 from rag_minimal.retriever import SimpleRetriever
 
 
-DEFAULT_TEMPLATE = """You are a helpful assistant. Use the following context to answer the question.
+DEFAULT_TEMPLATE = """你是一个有用的助手。请根据以下参考文档来回答用户的问题。
 
-Context:
+参考文档：
 {context}
 
-Question: {question}
+用户问题：{question}
 
-Answer:"""
+请根据参考文档给出回答："""
 
 
 def create_rag_chain(
