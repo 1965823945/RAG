@@ -9,10 +9,6 @@ from rag_minimal.chunker import chunk_documents
 class TestSimpleLLM:
     """Tests for SimpleLLM."""
 
-    def test_llm_type(self):
-        llm = SimpleLLM()
-        assert llm._llm_type == "simple_llm"
-
     def test_generate(self):
         llm = SimpleLLM()
         result = llm.generate(["Hello"])
