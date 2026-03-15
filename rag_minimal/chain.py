@@ -1,11 +1,9 @@
 """RAG Chain module."""
-from typing import Dict, Any
 from langchain_core.runnables import RunnableSequence
 from langchain_core.prompts import PromptTemplate
 from langchain_core.language_models import BaseLLM
 from rag_minimal.llm import SimpleLLM
 from rag_minimal.retriever import SimpleRetriever
-from rag_minimal.vectorstore import Chroma
 
 
 DEFAULT_TEMPLATE = """You are a helpful assistant. Use the following context to answer the question.

@@ -22,7 +22,4 @@ class SimpleRetriever(BaseRetriever):
         run_manager: CallbackManagerForRetrieverRun,
     ) -> List[Document]:
         """Retrieve relevant documents for the query."""
-        return self.vector_store.similarity_search(
-            query=query,
-            k=self.k,
-        )
+        return self.vector_store.similarity_search(query=query, k=self.k)

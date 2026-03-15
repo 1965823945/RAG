@@ -6,6 +6,17 @@ from rag_minimal.retriever import SimpleRetriever
 from rag_minimal.llm import SimpleLLM
 
 
+@st.cache_resource
+def get_rag_chain(persist_dir: str, k: int):
+    """Create and cache the RAG chain."""
+    vector_store = load_vector_store(persist_dir)
+    if vector_store is None:
+        return None
+    retriever = SimpleRetriever(vector_store=vector_store, k=k)
+    llm = SimpleLLM()
+    return create_rag_chain(llm=llm, retriever=retriever)
+
+
 def main():
     st.title("Minimal RAG Demo")
     st.write("Ask questions about your documents using Retrieval-Augmented Generation.")
@@ -23,14 +34,10 @@ def main():
     if st.button("Ask") and question:
         with st.spinner("Retrieving and generating answer..."):
             try:
-                vector_store = load_vector_store(persist_dir)
-                if vector_store is None:
-                    st.error("No vector store found. Please run the setup first.")
+                chain = get_rag_chain(persist_dir, k)
+                if chain is None:
+                    st.error("No vector store found. Please run main.py first.")
                     return
-                
-                retriever = SimpleRetriever(vector_store=vector_store, k=k)
-                llm = SimpleLLM()
-                chain = create_rag_chain(llm=llm, retriever=retriever)
                 
                 answer = invoke_rag_chain(chain, question)
                 
