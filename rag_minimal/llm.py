@@ -11,7 +11,6 @@ class SimpleLLM(BaseLLM):
     This is NOT suitable for production use.
     """
 
-    @property
     def _generate(
         self,
         prompts: List[str],
