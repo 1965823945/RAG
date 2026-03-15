@@ -24,5 +24,6 @@ class SimpleLLM(BaseLLM):
             generations.append([Generation(text=f"[SimpleLLM] Response to: {prompt[:50]}...")])
         return LLMResult(generations=generations)
 
+    @property
     def _llm_type(self) -> str:
         return "simple_llm"
