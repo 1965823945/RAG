@@ -37,6 +37,19 @@ pip install -r requirements.txt
 
 ## 快速开始
 
+### 方式一：一键启动（推荐）
+
+```bash
+python run.py
+```
+
+启动器会：
+1. 检查依赖是否安装
+2. 让你选择是否重建向量数据库
+3. 自动打开浏览器访问 Web 界面
+
+### 方式二：手动运行
+
 1. **准备文档库**
    
    在 `docs/` 目录下放置您的 Word 文档 (.docx) 或 PDF 文档 (.pdf)。
@@ -57,6 +70,18 @@ pip install -r requirements.txt
    ```bash
    streamlit run rag_minimal/app.py
    ```
+
+## 打包为 EXE（可选）
+
+```bash
+# 安装 PyInstaller
+pip install pyinstaller
+
+# 打包
+pyinstaller build.spec
+
+# 打包完成后在 dist/RAG_System 目录下找到 RAG_System.exe
+```
 
 ## 使用说明
 
