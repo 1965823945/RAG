@@ -5,8 +5,7 @@ RAG 启动器 - 一键启动 RAG 系统
 import os
 import sys
 import shutil
-import webbrowser
-import time
+import subprocess
 import threading
 from pathlib import Path
 
@@ -39,11 +38,8 @@ def rebuild_vector_store():
             shutil.rmtree(vector_store_dir)
         except Exception as e:
             print(f"无法删除旧数据库: {e}")
-            print("将创建新的数据库...")
-            vector_store_dir = f"chroma_db_{int(time.time())}"
 
     print(f"\n正在加载文档并创建向量数据库...")
-    print("(如果文档较多，这可能需要一些时间)\n")
 
     # 导入并运行
     sys.path.insert(0, os.getcwd())
@@ -69,16 +65,6 @@ def rebuild_vector_store():
     print(f"向量数据库已创建: {vector_store_dir}")
 
     return True
-
-
-def open_browser(url, delay=3):
-    """延迟打开浏览器"""
-
-    def _open():
-        time.sleep(delay)
-        webbrowser.open(url)
-
-    threading.Thread(target=_open, daemon=True).start()
 
 
 def main():
@@ -124,13 +110,11 @@ def main():
     print()
 
     if choice == "1":
-        # 重建向量数据库
         success = rebuild_vector_store()
         if not success:
             input("\n按回车键退出...")
             return
     elif choice == "2":
-        # 检查向量数据库是否存在
         if not os.path.exists("chroma_db"):
             print("向量数据库不存在，请先选择选项 1 重建")
             input("\n按回车键退出...")
@@ -141,15 +125,12 @@ def main():
 
     # 启动 Streamlit
     print("\n正在启动 Web 界面...")
-    print("浏览器将自动打开，如果没有打开请访问: http://localhost:8501")
+    print("请访问: http://localhost:8501")
     print("\n按 Ctrl+C 可以停止服务")
     print("-" * 40)
 
-    # 延迟打开浏览器
-    open_browser("http://localhost:8501", delay=2)
-
-    # 启动 Streamlit
-    os.system("streamlit run rag_minimal/app.py")
+    # 使用 subprocess 启动，避免双窗口
+    subprocess.run(["streamlit", "run", "rag_minimal/app.py"])
 
 
 if __name__ == "__main__":
