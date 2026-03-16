@@ -7,6 +7,45 @@ from langchain_core.retrievers import BaseRetriever
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 
 
+# Common question patterns to ignore
+IGNORE_PATTERNS = [
+    r"是什么",
+    r"是什么？",
+    r"什么是",
+    r"什么意思",
+    r"是什么东西",
+    r"干嘛用的",
+    r"用来做什么",
+    r"的原理",
+    r"怎么工作",
+    r"如何工作",
+    r"is what",
+    r"what is",
+    r"how does",
+    r"what does",
+    r"请问",
+    r"能不能",
+    r"如何",
+    r"怎样",
+    r"怎么",
+]
+
+# Synonym mapping
+SYNONYMS = {
+    "llm": ["大语言模型", "语言模型", "LLM"],
+    "大语言模型": ["llm", "语言模型", "LLM"],
+    "langchain": ["langchain", "LangChain"],
+    "rag": ["rag", "RAG", "检索增强生成", "检索增强"],
+    "检索增强生成": ["rag", "RAG"],
+    "向量数据库": ["向量库", "向量存储", "vector database"],
+    "embedding": ["嵌入", "向量表示", "文本嵌入"],
+    "文档分块": ["chunking", "分块", "文本分块"],
+    "语义搜索": ["语义检索", "semantic search"],
+    "微调": ["fine-tuning", "微调", "finetune"],
+    "提示词": ["prompt", "提示词工程"],
+}
+
+
 class SimpleRetriever(BaseRetriever):
     """Keyword-based retriever for demo - more reliable than vector search with fake embeddings."""
 
@@ -20,6 +59,29 @@ class SimpleRetriever(BaseRetriever):
             documents = []
         super().__init__(documents=documents or [], k=k, **kwargs)
 
+    def _extract_keywords(self, query: str) -> List[str]:
+        """Extract meaningful keywords from query."""
+        # Lowercase
+        query = query.lower()
+
+        # Remove question patterns
+        for pattern in IGNORE_PATTERNS:
+            query = re.sub(pattern, "", query)
+
+        # Extract words
+        words = re.findall(r"[\w\u4e00-\u9fff]+", query)
+
+        # Filter short words
+        words = [w for w in words if len(w) >= 2]
+
+        # Add synonyms
+        expanded = set(words)
+        for word in words:
+            if word in SYNONYMS:
+                expanded.update(SYNONYMS[word])
+
+        return list(expanded)
+
     def _get_relevant_documents(
         self,
         query: str,
@@ -30,42 +92,52 @@ class SimpleRetriever(BaseRetriever):
         if not self.documents:
             return []
 
-        # Clean and prepare query
-        query_lower = query.lower().strip()
+        # Extract keywords
+        keywords = self._extract_keywords(query)
+
+        if not keywords:
+            # Fallback: try original query
+            keywords = [query.lower()]
 
         # Score each document
         scored = []
         for i, doc in enumerate(self.documents):
             doc_text = doc.page_content.lower()
-            doc_title = doc.metadata.get("source", "") if doc.metadata else ""
-            if doc_title:
-                doc_title = doc_title.lower()
+            doc_title = ""
+            if doc.metadata:
+                doc_title = doc.metadata.get("source", "")
+                if doc_title:
+                    doc_title = doc_title.lower()
 
             score = 0
 
-            # Check if query appears as substring (most important)
-            if query_lower in doc_text:
-                score += 100
+            # Check main keywords in document
+            for keyword in keywords:
+                # Exact substring match in full text
+                if keyword in doc_text:
+                    score += 30
 
-            # Check for partial matches in title
-            if doc_title and query_lower in doc_title:
-                score += 50
+                # Exact match in title
+                if doc_title and keyword in doc_title:
+                    score += 50
 
-            # Check each word in query
-            words = re.findall(r"[\w\u4e00-\u9fff]+", query_lower)
-            for word in words:
-                if len(word) < 2:  # Skip single characters
-                    continue
-                # Count occurrences in document
-                count = doc_text.count(word)
+                # Word appears in first 300 chars
+                if keyword in doc_text[:300]:
+                    score += 10
+
+                # Count occurrences
+                count = doc_text.count(keyword)
                 if count > 0:
                     score += count * 2
-                # Extra points if word is in first 200 chars
-                if word in doc_text[:200]:
-                    score += 5
-                # Extra points if word is in title
-                if doc_title and word in doc_title:
-                    score += 10
+
+            # Boost for shorter documents (more focused)
+            if len(doc.page_content) < 500:
+                score *= 1.3
+
+            # Boost if multiple keywords match
+            matched_keywords = sum(1 for kw in keywords if kw in doc_text)
+            if matched_keywords >= 2:
+                score *= 1.5
 
             if score > 0:
                 scored.append((score, i, doc))

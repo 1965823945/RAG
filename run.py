@@ -145,8 +145,21 @@ def main():
     print("\n按 Ctrl+C 可以停止服务")
     print("-" * 40)
 
-    # 使用 subprocess 启动，避免双窗口
-    subprocess.run(["streamlit", "run", "rag_minimal/app.py"])
+    # 使用 Popen 启动，避免关闭时的报错
+    import subprocess
+
+    process = subprocess.Popen(
+        ["streamlit", "run", "rag_minimal/app.py"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    try:
+        process.wait()
+    except KeyboardInterrupt:
+        print("\n正在停止服务...")
+        process.terminate()
+        process.wait()
 
 
 if __name__ == "__main__":
