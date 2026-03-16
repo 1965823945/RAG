@@ -1,4 +1,4 @@
-"""Improved retriever with keyword-based reranking."""
+"""Simple keyword-based retriever for demo purposes."""
 
 import re
 from typing import List
@@ -9,7 +9,7 @@ from langchain_community.vectorstores import Chroma
 
 
 class SimpleRetriever(BaseRetriever):
-    """Improved retriever with keyword reranking for demo."""
+    """Keyword-based retriever for demo - more reliable than fake embeddings."""
 
     vector_store: Chroma
     k: int = 3
@@ -20,45 +20,61 @@ class SimpleRetriever(BaseRetriever):
         *,
         run_manager: CallbackManagerForRetrieverRun,
     ) -> List[Document]:
-        """Retrieve and rerank documents."""
-        # Get more candidates than needed
-        candidates = self.vector_store.similarity_search(query=query, k=self.k * 3)
+        """Retrieve documents using keyword matching."""
 
-        if not candidates:
+        # Get all documents from vector store
+        try:
+            result = self.vector_store.get()
+            all_docs = result.get("documents", [])
+            all_metadatas = result.get("metadatas", [])
+        except Exception:
+            # Fallback to similarity search
+            return self.vector_store.similarity_search(query=query, k=self.k)
+
+        if not all_docs:
             return []
 
-        # Rerank by keyword matching
-        reranked = self._rerank(query, candidates)
-
-        return reranked[: self.k]
-
-    def _rerank(self, query: str, documents: List[Document]) -> List[Document]:
-        """Rerank documents based on keyword overlap with query."""
-        # Extract keywords from query
+        # Extract keywords from query (Chinese + English)
         query_lower = query.lower()
-        # Extract Chinese and English words
-        query_words = set(re.findall(r"[\w\u4e00-\u9fff]+", query_lower))
+        # Extract Chinese characters and English words
+        query_terms = set(re.findall(r"[\w]+", query_lower))
 
-        # Score each document
+        # Score each document by keyword overlap
         scored = []
-        for doc in documents:
-            doc_text = doc.page_content.lower()
-            doc_words = set(re.findall(r"[\w\u4e00-\u9fff]+", doc_text))
+        for i, doc_text in enumerate(all_docs):
+            doc_lower = doc_text.lower()
+            doc_terms = set(re.findall(r"[\w]+", doc_lower))
 
-            # Calculate keyword overlap
-            overlap = query_words & doc_words
+            # Calculate overlap
+            overlap = query_terms & doc_terms
+            score = len(overlap)
 
-            # Boost score for exact matches at start of document
-            boost = 0
-            for word in overlap:
-                if word in doc_text[:100]:  # First 100 chars
-                    boost += 2
+            # Boost if query appears at start of document
+            first_chars = doc_lower[:200]
+            for term in overlap:
+                if term in first_chars:
+                    score += 3
 
-            score = len(overlap) + boost
-            scored.append((score, doc))
+            # Extra boost for exact phrase match
+            if query_lower in doc_lower:
+                score += 10
 
-        # Sort by score descending
+            # Boost for title-like content (first line)
+            first_line = doc_text.split("\n")[0] if "\n" in doc_text else doc_text[:50]
+            if any(term in first_line.lower() for term in query_terms if len(term) > 1):
+                score += 2
+
+            if score > 0:
+                metadata = all_metadatas[i] if i < len(all_metadatas) else {}
+                scored.append((score, i, doc_text, metadata))
+
+        # Sort by score
         scored.sort(key=lambda x: -x[0])
 
-        # Return reranked documents
-        return [doc for score, doc in scored]
+        # Return top k
+        results = []
+        for score, i, text, metadata in scored[: self.k]:
+            doc = Document(page_content=text, metadata=metadata)
+            results.append(doc)
+
+        return results
