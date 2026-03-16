@@ -38,18 +38,18 @@ class SimpleLLM(BaseLLM):
                 )
                 question = prompt_text[q_start:q_end].strip()
 
-                # Clean up the context - remove extra whitespace and truncate properly
+                # Clean and summarize the context
                 context_lines = [
                     line.strip() for line in context.split("\n") if line.strip()
                 ]
                 clean_context = " ".join(context_lines)
 
                 # Truncate to reasonable length
-                if len(clean_context) > 600:
-                    clean_context = clean_context[:600] + "..."
+                if len(clean_context) > 400:
+                    clean_context = clean_context[:400] + "..."
 
                 # Generate a natural Chinese response
-                response = f"{clean_context}\n\n根据以上文档内容，关于「{question}」的回答如下：\n\n文档中提到了相关内容，您可以参考上述内容了解更多详情。"
+                response = f"根据检索到的文档：\n\n{clean_context}\n\n以上内容回答了您的问题「{question}」。"
 
             # English prompt template
             elif "Context:" in prompt_text and "Question:" in prompt_text:
