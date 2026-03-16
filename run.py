@@ -39,6 +39,22 @@ def rebuild_vector_store():
         except Exception as e:
             print(f"无法删除旧数据库: {e}")
 
+    # Always delete old database before creating new one
+    vector_store_dir = "chroma_db"
+    if os.path.exists(vector_store_dir):
+        print(f"正在删除旧的向量数据库...")
+        import time
+
+        time.sleep(1)  # Wait a bit
+        try:
+            shutil.rmtree(vector_store_dir)
+        except Exception as e:
+            print(f"无法删除旧数据库，将使用新名称: {e}")
+            # Use a new name instead
+            import time
+
+            vector_store_dir = f"chroma_db_{int(time.time())}"
+
     print(f"\n正在加载文档并创建向量数据库...")
 
     # 导入并运行
