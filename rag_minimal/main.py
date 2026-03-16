@@ -43,7 +43,7 @@ def main():
 
     print("\n[3/5] 正在创建向量数据库...")
     embeddings = FakeEmbeddings()
-    vector_store = create_vector_store(
+    create_vector_store(
         chunks, persist_directory=vector_store_dir, embeddings=embeddings
     )
     print(f"向量数据库已创建: {vector_store_dir}")
