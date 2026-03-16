@@ -8,7 +8,8 @@ from langchain_core.embeddings import Embeddings
 class FakeEmbeddings(Embeddings):
     """Fake embeddings for demonstration purposes.
 
-    This is NOT suitable for production use - it returns deterministic vectors based on text content.
+    Uses text content to generate deterministic vectors.
+    For better results, consider using real embeddings like OpenAIEmbeddings.
     """
 
     def __init__(self, dimension: int = 384):
@@ -19,18 +20,31 @@ class FakeEmbeddings(Embeddings):
         return self._dimension
 
     def _get_deterministic_vector(self, text: str) -> List[float]:
-        """Generate a deterministic vector from text."""
-        # Create a hash of the text
-        hash_bytes = hashlib.md5(text.encode()).digest()
-        # Convert hash to a list of floats
-        return [float(b) / 255.0 for b in hash_bytes] * (self._dimension // 16 + 1)
+        """Generate a deterministic vector from text content."""
+        # Normalize text
+        text = text.lower().strip()
+
+        # Create multiple hashes for better distribution
+        hash1 = hashlib.sha256(text.encode()).digest()
+        hash2 = hashlib.sha256((text + "suffix").encode()).digest()
+        hash3 = hashlib.md5(text.encode()).digest()
+
+        # Combine hashes
+        combined = hash1 + hash2 + hash3
+
+        # Convert to floats with better distribution
+        vector = [float(b) / 255.0 for b in combined]
+
+        # Repeat to match dimension
+        while len(vector) < self._dimension:
+            vector = vector * 2
+
+        return vector[: self._dimension]
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Return fake embeddings for documents."""
-        return [
-            self._get_deterministic_vector(text)[: self._dimension] for text in texts
-        ]
+        return [self._get_deterministic_vector(text) for text in texts]
 
     def embed_query(self, text: str) -> List[float]:
         """Return fake embedding for query."""
-        return self._get_deterministic_vector(text)[: self._dimension]
+        return self._get_deterministic_vector(text)
