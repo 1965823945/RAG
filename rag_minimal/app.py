@@ -1,4 +1,5 @@
 """Streamlit app for RAG demo - Chinese UI."""
+
 import streamlit as st
 from rag_minimal.chain import create_rag_chain, invoke_rag_chain
 from rag_minimal.vectorstore import load_vector_store
@@ -12,7 +13,28 @@ def get_rag_chain(persist_dir: str, k: int):
     vector_store = load_vector_store(persist_dir)
     if vector_store is None:
         return None
-    retriever = SimpleRetriever(vector_store=vector_store, k=k)
+
+    # Get documents from vector store
+    try:
+        docs_data = vector_store.get()
+        documents = []
+        for i, doc_text in enumerate(docs_data.get("documents", [])):
+            from langchain_core.documents import Document
+
+            documents.append(
+                Document(
+                    page_content=doc_text,
+                    metadata=docs_data.get("metadatas", [{}])[i]
+                    if i < len(docs_data.get("metadatas", []))
+                    else {},
+                )
+            )
+
+        retriever = SimpleRetriever(documents=documents, k=k)
+    except Exception:
+        # Fallback to old behavior
+        retriever = SimpleRetriever(vector_store=vector_store, k=k)
+
     llm = SimpleLLM()
     return create_rag_chain(llm=llm, retriever=retriever)
 
@@ -20,17 +42,17 @@ def get_rag_chain(persist_dir: str, k: int):
 def main():
     st.title("RAG 检索增强生成系统")
     st.write("基于您的文档进行智能问答")
-    
+
     if "history" not in st.session_state:
         st.session_state.history = []
-    
+
     with st.sidebar:
         st.header("配置")
         persist_dir = st.text_input("向量数据库目录", value="chroma_db")
         k = st.slider("检索文档数量", 1, 10, 3)
-    
+
     question = st.text_input("请输入您的问题:", key="question_input")
-    
+
     if st.button("提问") and question:
         with st.spinner("正在检索并生成回答..."):
             try:
@@ -38,14 +60,14 @@ def main():
                 if chain is None:
                     st.error("未找到向量数据库，请先运行 main.py")
                     return
-                
+
                 answer = invoke_rag_chain(chain, question)
-                
+
                 st.session_state.history.append((question, answer))
-                
+
             except Exception as e:
                 st.error(f"错误: {str(e)}")
-    
+
     if st.session_state.history:
         st.divider()
         st.subheader("对话历史")

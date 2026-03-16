@@ -1,18 +1,27 @@
-"""Simple keyword-based retriever for demo purposes."""
+"""Keyword-based retriever for better demo results."""
 
 import re
 from typing import List
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
-from langchain_community.vectorstores import Chroma
 
 
 class SimpleRetriever(BaseRetriever):
-    """Keyword-based retriever for demo - more reliable than fake embeddings."""
+    """Keyword-based retriever for demo - more reliable than vector search with fake embeddings."""
 
-    vector_store: Chroma
+    documents: List[Document]
     k: int = 3
+
+    def __init__(self, documents: List[Document] = None, k: int = 3, **kwargs):
+        # Accept either documents or vector_store for compatibility
+        if documents is None and "vector_store" in kwargs:
+            # Fallback to old behavior
+            vector_store = kwargs.pop("vector_store")
+            self.vector_store = vector_store
+            documents = []
+
+        super().__init__(documents=documents or [], k=k, **kwargs)
 
     def _get_relevant_documents(
         self,
@@ -20,61 +29,47 @@ class SimpleRetriever(BaseRetriever):
         *,
         run_manager: CallbackManagerForRetrieverRun,
     ) -> List[Document]:
-        """Retrieve documents using keyword matching."""
-
-        # Get all documents from vector store
-        try:
-            result = self.vector_store.get()
-            all_docs = result.get("documents", [])
-            all_metadatas = result.get("metadatas", [])
-        except Exception:
-            # Fallback to similarity search
-            return self.vector_store.similarity_search(query=query, k=self.k)
-
-        if not all_docs:
+        """Retrieve relevant documents using keyword matching."""
+        if not self.documents:
             return []
 
-        # Extract keywords from query (Chinese + English)
+        # Extract query keywords
         query_lower = query.lower()
-        # Extract Chinese characters and English words
-        query_terms = set(re.findall(r"[\w]+", query_lower))
+        query_words = set(re.findall(r"[\w\u4e00-\u9fff]+", query_lower))
 
-        # Score each document by keyword overlap
+        # Score each document
         scored = []
-        for i, doc_text in enumerate(all_docs):
-            doc_lower = doc_text.lower()
-            doc_terms = set(re.findall(r"[\w]+", doc_lower))
+        for i, doc in enumerate(self.documents):
+            doc_text = doc.page_content.lower()
+            doc_words = set(re.findall(r"[\w\u4e00-\u9fff]+", doc_text))
 
-            # Calculate overlap
-            overlap = query_terms & doc_terms
+            # Calculate keyword overlap
+            overlap = query_words & doc_words
+
+            if not overlap:
+                continue
+
+            # Calculate score
             score = len(overlap)
 
-            # Boost if query appears at start of document
-            first_chars = doc_lower[:200]
-            for term in overlap:
-                if term in first_chars:
-                    score += 3
-
-            # Extra boost for exact phrase match
-            if query_lower in doc_lower:
+            # Boost for exact phrase match
+            if query_lower in doc_text:
                 score += 10
 
-            # Boost for title-like content (first line)
-            first_line = doc_text.split("\n")[0] if "\n" in doc_text else doc_text[:50]
-            if any(term in first_line.lower() for term in query_terms if len(term) > 1):
-                score += 2
+            # Boost for match in first 200 chars
+            first_200 = doc_text[:200]
+            for word in overlap:
+                if word in first_200:
+                    score += 2
 
-            if score > 0:
-                metadata = all_metadatas[i] if i < len(all_metadatas) else {}
-                scored.append((score, i, doc_text, metadata))
+            # Boost for shorter documents (more likely to be relevant)
+            if len(doc.page_content) < 400:
+                score *= 1.5
 
-        # Sort by score
+            scored.append((score, i, doc))
+
+        # Sort by score descending
         scored.sort(key=lambda x: -x[0])
 
-        # Return top k
-        results = []
-        for score, i, text, metadata in scored[: self.k]:
-            doc = Document(page_content=text, metadata=metadata)
-            results.append(doc)
-
-        return results
+        # Return top k results
+        return [doc for score, i, doc in scored[: self.k]]

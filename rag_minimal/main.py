@@ -49,7 +49,7 @@ def main():
     print(f"向量数据库已创建: {vector_store_dir}")
 
     print("\n[4/5] 正在构建 RAG 链...")
-    retriever = SimpleRetriever(vector_store=vector_store, k=3)
+    retriever = SimpleRetriever(documents=chunks, k=3)
     llm = SimpleLLM()
     chain = create_rag_chain(llm=llm, retriever=retriever)
     print("RAG 链准备就绪！")
