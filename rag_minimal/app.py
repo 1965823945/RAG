@@ -1,5 +1,13 @@
 """Streamlit app for RAG demo - Chinese UI with model selection."""
 
+import os
+import sys
+
+# 添加项目根目录到 Python 路径
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 import streamlit as st
 from rag_minimal.chain import create_rag_chain, invoke_rag_chain
 from rag_minimal.vectorstore import load_vector_store
