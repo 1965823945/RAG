@@ -4,9 +4,13 @@ RAG 启动器 - 一键启动 RAG 系统
 
 import os
 import sys
+
+# 添加当前目录到 Python 路径
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, script_dir)
+
 import shutil
 import subprocess
-import threading
 from pathlib import Path
 
 
@@ -29,16 +33,6 @@ def check_dependencies():
 
 def rebuild_vector_store():
     """重建向量数据库"""
-    vector_store_dir = "chroma_db"
-
-    # 删除旧数据库
-    if os.path.exists(vector_store_dir):
-        print(f"正在删除旧的向量数据库: {vector_store_dir}")
-        try:
-            shutil.rmtree(vector_store_dir)
-        except Exception as e:
-            print(f"无法删除旧数据库: {e}")
-
     # Always delete old database before creating new one
     vector_store_dir = "chroma_db"
     if os.path.exists(vector_store_dir):
@@ -51,14 +45,11 @@ def rebuild_vector_store():
         except Exception as e:
             print(f"无法删除旧数据库，将使用新名称: {e}")
             # Use a new name instead
-            import time
-
             vector_store_dir = f"chroma_db_{int(time.time())}"
 
     print(f"\n正在加载文档并创建向量数据库...")
 
-    # 导入并运行
-    sys.path.insert(0, os.getcwd())
+    # Import and run
     from rag_minimal.loader import load_documents
     from rag_minimal.chunker import chunk_documents
     from rag_minimal.vectorstore import create_vector_store
@@ -145,9 +136,8 @@ def main():
     print("\n按 Ctrl+C 可以停止服务")
     print("-" * 40)
 
-    # 使用 Popen 启动，避免关闭时的报错
-    import subprocess
-
+    # 使用 Popen 启动
+    os.chdir(script_dir)  # 切换到脚本目录
     process = subprocess.Popen(
         ["streamlit", "run", "rag_minimal/app.py"],
         stdout=subprocess.DEVNULL,
