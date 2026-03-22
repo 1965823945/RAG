@@ -25,3 +25,13 @@ DEFAULT_EMBEDDING_DIM = 384
 
 DEFAULT_DOCS_DIR = "docs"
 DEFAULT_VECTORSTORE_DIR = "chroma_db"
+
+
+# ─────────────────────────────────────────────────────────────
+# Planning Agent Configuration
+# ─────────────────────────────────────────────────────────────
+
+DEFAULT_QUALITY_THRESHOLD = 0.6  # 质量阈值
+DEFAULT_MAX_ITERATIONS = 3  # 最大迭代次数
+DEFAULT_MAX_COT_STEPS = 10  # 思维链最大步骤
+DEFAULT_MAX_SUBTASKS = 7  # 最大子任务数

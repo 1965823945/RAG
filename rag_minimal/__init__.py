@@ -4,6 +4,13 @@ This package provides a pluggable RAG system with:
 - Standardized tool interface
 - Agent runtime for tool orchestration
 - MCP server for external integration
+- Autonomous Planning Agent with:
+  - Task Decomposition
+  - Chain of Thought reasoning
+  - Self-Reflection
+- Conversational AI with:
+  - Multi-turn dialogue support
+  - Memory system (short-term, long-term, working memory)
 """
 
 from rag_minimal.schemas import (
@@ -12,6 +19,28 @@ from rag_minimal.schemas import (
     SearchOutput,
     RAGOutput,
     ToolMetadata,
+    # Planning Agent schemas
+    TaskStatus,
+    TaskPriority,
+    SubTask,
+    TaskDecomposition,
+    ThoughtStep,
+    ChainOfThoughtResult,
+    ReflectionType,
+    ReflectionItem,
+    SelfReflectionResult,
+    PlanningAgentState,
+    PlanningAgentOutput,
+    # Memory schemas
+    MessageRole,
+    Message,
+    Conversation,
+    MemoryType,
+    MemoryEntry,
+    MemorySearchResult,
+    ConversationContext,
+    ConversationalInput,
+    ConversationalOutput,
 )
 from rag_minimal.tools import (
     Tool,
@@ -20,6 +49,20 @@ from rag_minimal.tools import (
     ToolLogger,
 )
 from rag_minimal.agent_runtime import AgentRuntime
+from rag_minimal.planning import (
+    TaskDecomposer,
+    ChainOfThought,
+    SelfReflection,
+    PlanningAgent,
+)
+from rag_minimal.memory import (
+    ConversationManager,
+    MemorySystem,
+    ShortTermMemory,
+    LongTermMemory,
+    WorkingMemory,
+    ConversationalAgent,
+)
 
 __all__ = [
     # Schemas
@@ -28,6 +71,28 @@ __all__ = [
     "SearchOutput",
     "RAGOutput",
     "ToolMetadata",
+    # Planning Schemas
+    "TaskStatus",
+    "TaskPriority",
+    "SubTask",
+    "TaskDecomposition",
+    "ThoughtStep",
+    "ChainOfThoughtResult",
+    "ReflectionType",
+    "ReflectionItem",
+    "SelfReflectionResult",
+    "PlanningAgentState",
+    "PlanningAgentOutput",
+    # Memory Schemas
+    "MessageRole",
+    "Message",
+    "Conversation",
+    "MemoryType",
+    "MemoryEntry",
+    "MemorySearchResult",
+    "ConversationContext",
+    "ConversationalInput",
+    "ConversationalOutput",
     # Tools
     "Tool",
     "ToolRegistry",
@@ -35,6 +100,18 @@ __all__ = [
     "ToolLogger",
     # Runtime
     "AgentRuntime",
+    # Planning Agent
+    "TaskDecomposer",
+    "ChainOfThought",
+    "SelfReflection",
+    "PlanningAgent",
+    # Memory & Conversation
+    "ConversationManager",
+    "MemorySystem",
+    "ShortTermMemory",
+    "LongTermMemory",
+    "WorkingMemory",
+    "ConversationalAgent",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.3.0"
