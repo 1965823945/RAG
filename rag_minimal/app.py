@@ -1,4 +1,4 @@
-"""Streamlit app for RAG demo - Chinese UI with model selection."""
+"""Streamlit app for RAG demo - using AgentRuntime."""
 
 import os
 import sys
@@ -9,39 +9,13 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 import streamlit as st
-from rag_minimal.chain import create_rag_chain, invoke_rag_chain
-from rag_minimal.vectorstore import load_vector_store
-from rag_minimal.retriever import SimpleRetriever
+from rag_minimal.agent_runtime import AgentRuntime
 from rag_minimal.llm_config import create_llm, LLM_PROVIDERS
 
 
 @st.cache_resource
-def get_rag_chain(persist_dir: str, k: int, llm_config: dict):
-    """Create and cache the RAG chain."""
-    vector_store = load_vector_store(persist_dir)
-    if vector_store is None:
-        return None
-
-    # Get documents from vector store
-    try:
-        docs_data = vector_store.get()
-        documents = []
-        for i, doc_text in enumerate(docs_data.get("documents", [])):
-            from langchain_core.documents import Document
-
-            documents.append(
-                Document(
-                    page_content=doc_text,
-                    metadata=docs_data.get("metadatas", [{}])[i]
-                    if i < len(docs_data.get("metadatas", []))
-                    else {},
-                )
-            )
-
-        retriever = SimpleRetriever(documents=documents, k=k)
-    except Exception:
-        retriever = SimpleRetriever(vector_store=vector_store, k=k)
-
+def get_agent_runtime(docs_dir: str, llm_config: dict) -> AgentRuntime:
+    """Create and cache the AgentRuntime."""
     # Create LLM based on config
     llm = create_llm(
         provider=llm_config.get("provider", "simple"),
@@ -51,7 +25,7 @@ def get_rag_chain(persist_dir: str, k: int, llm_config: dict):
         temperature=llm_config.get("temperature", 0.7),
     )
 
-    return create_rag_chain(llm=llm, retriever=retriever)
+    return AgentRuntime(docs_dir=docs_dir, llm=llm)
 
 
 def main():
@@ -71,9 +45,9 @@ def main():
     with st.sidebar:
         st.header("⚙️ 配置")
 
-        # Vector store settings
-        st.subheader("向量数据库")
-        persist_dir = st.text_input("向量数据库目录", value="chroma_db")
+        # Document directory
+        st.subheader("📁 文档目录")
+        docs_dir = st.text_input("文档目录", value="docs")
         k = st.slider("检索文档数量", 1, 10, 3, help="每次检索返回的文档数量")
 
         # LLM settings
@@ -140,16 +114,28 @@ def main():
     if st.button("提问", type="primary") and question:
         with st.spinner("正在检索并生成回答..."):
             try:
-                chain = get_rag_chain(persist_dir, k, st.session_state.llm_config)
-                if chain is None:
-                    st.error(
-                        "未找到向量数据库，请先运行 main.py 或选择「重新加载文档库」"
-                    )
+                # Get agent runtime
+                agent = get_agent_runtime(docs_dir, st.session_state.llm_config)
+
+                # Run RAG pipeline
+                result = agent.ask(question, top_k=k)
+
+                if not result.success:
+                    st.error(f"错误: {result.message}")
                     return
 
-                answer = invoke_rag_chain(chain, question)
+                st.session_state.history.append((question, result.answer))
 
-                st.session_state.history.append((question, answer))
+                # Show sources (optional)
+                if result.sources:
+                    with st.expander("📚 参考来源"):
+                        for i, src in enumerate(result.sources, 1):
+                            st.markdown(f"**来源 {i}:** {src.source or '未知'}")
+                            st.text(
+                                src.content[:200] + "..."
+                                if len(src.content) > 200
+                                else src.content
+                            )
 
             except Exception as e:
                 st.error(f"错误: {str(e)}")

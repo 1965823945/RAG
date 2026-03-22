@@ -86,7 +86,7 @@ class SimpleRetriever(BaseRetriever):
         self,
         query: str,
         *,
-        run_manager: CallbackManagerForRetrieverRun,
+        run_manager: CallbackManagerForRetrieverRun = None,
     ) -> List[Document]:
         """Retrieve relevant documents using keyword matching."""
         if not self.documents:
