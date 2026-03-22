@@ -1,6 +1,5 @@
 """Simple LLM wrapper for demo purposes."""
 
-import re
 from typing import Any, List, Optional
 from langchain_core.language_models import BaseLLM
 from langchain_core.outputs import Generation, LLMResult

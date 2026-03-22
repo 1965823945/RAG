@@ -1,6 +1,11 @@
 """LLM configuration and factory."""
 
+import logging
 from typing import Optional, Dict, Any
+
+from langchain_core.language_models import BaseLLM
+
+logger = logging.getLogger("rag_minimal")
 
 
 def create_llm(
@@ -10,7 +15,7 @@ def create_llm(
     base_url: Optional[str] = None,
     temperature: float = 0.7,
     **kwargs,
-):
+) -> BaseLLM:
     """Create an LLM based on provider.
 
     Args:
@@ -40,7 +45,7 @@ def create_llm(
                 **kwargs,
             )
         except ImportError:
-            print("请安装 langchain-openai: pip install langchain-openai")
+            logger.warning("langchain-openai not installed, falling back to SimpleLLM")
             from rag_minimal.llm import SimpleLLM
 
             return SimpleLLM()
@@ -53,7 +58,9 @@ def create_llm(
                 model=model_name, api_key=api_key, temperature=temperature, **kwargs
             )
         except ImportError:
-            print("请安装 langchain-anthropic: pip install langchain-anthropic")
+            logger.warning(
+                "langchain-anthropic not installed, falling back to SimpleLLM"
+            )
             from rag_minimal.llm import SimpleLLM
 
             return SimpleLLM()
@@ -64,19 +71,20 @@ def create_llm(
 
             return ChatOllama(model=model_name, temperature=temperature, **kwargs)
         except ImportError:
-            print("请安装 langchain-ollama: pip install langchain-ollama")
+            logger.warning("langchain-ollama not installed, falling back to SimpleLLM")
             from rag_minimal.llm import SimpleLLM
 
             return SimpleLLM()
 
     else:
+        logger.warning(f"Unknown provider '{provider}', using SimpleLLM")
         from rag_minimal.llm import SimpleLLM
 
         return SimpleLLM()
 
 
 # Provider options for UI
-LLM_PROVIDERS = {
+LLM_PROVIDERS: Dict[str, Dict[str, Any]] = {
     "simple": {
         "name": "演示模式 (SimpleLLM)",
         "description": "无需 API 密钥，适合演示",

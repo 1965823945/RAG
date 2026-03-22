@@ -53,10 +53,9 @@ class SimpleRetriever(BaseRetriever):
     k: int = 3
 
     def __init__(self, documents: List[Document] = None, k: int = 3, **kwargs):
-        if documents is None and "vector_store" in kwargs:
-            vector_store = kwargs.pop("vector_store")
-            self.vector_store = vector_store
-            documents = []
+        # Note: vector_store parameter kept for backward compatibility but not used
+        # SimpleRetriever uses keyword matching, not vector similarity
+        kwargs.pop("vector_store", None)
         super().__init__(documents=documents or [], k=k, **kwargs)
 
     def _extract_keywords(self, query: str) -> List[str]:

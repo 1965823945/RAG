@@ -23,7 +23,7 @@ class Tool(ABC):
     name: str
     description: str
     version: str = "1.0.0"
-    tags: List[str] = []
+    tags: Optional[List[str]] = None  # Avoid mutable default argument
     input_schema: Type[BaseModel]
     output_schema: Type[BaseModel]
 
@@ -67,7 +67,7 @@ class Tool(ABC):
             version=getattr(self, "version", "1.0.0"),
             input_schema=self.get_input_json_schema(),
             output_schema=self.get_output_json_schema(),
-            tags=getattr(self, "tags", []),
+            tags=getattr(self, "tags", None) or [],
         )
 
     def to_openai_function(self) -> Dict[str, Any]:

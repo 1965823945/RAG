@@ -4,25 +4,14 @@ from typing import Any, Dict, Optional
 
 from langchain_core.language_models import BaseLLM
 
+from rag_minimal.constants import DEFAULT_RAG_PROMPT
 from rag_minimal.schemas import (
     SearchOutput,
-    SearchResultItem,
-    RAGInput,
     RAGOutput,
 )
 from rag_minimal.tools.knowledge_search import KnowledgeSearchTool
 from rag_minimal.tools.registry import ToolRegistry
 from rag_minimal.llm import SimpleLLM
-
-
-DEFAULT_PROMPT_TEMPLATE = """你是一个有用的助手。请根据以下参考文档来回答用户的问题。
-
-参考文档：
-{context}
-
-用户问题：{question}
-
-请根据参考文档给出回答："""
 
 
 class AgentRuntime:
@@ -37,7 +26,7 @@ class AgentRuntime:
         self,
         docs_dir: str = "docs",
         llm: Optional[BaseLLM] = None,
-        prompt_template: str = DEFAULT_PROMPT_TEMPLATE,
+        prompt_template: str = DEFAULT_RAG_PROMPT,
     ):
         self.registry = ToolRegistry()
         self.registry.register(KnowledgeSearchTool(docs_dir=docs_dir))
