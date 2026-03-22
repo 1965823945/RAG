@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "rag-minimal": {
+      "command": "python",
+      "args": ["-m", "rag_minimal.mcp.run", "--docs-dir", "docs"],
+      "cwd": "D:\\WorkSpace\\RAG"
+    }
+  }
+}
