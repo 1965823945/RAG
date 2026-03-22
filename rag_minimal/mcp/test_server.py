@@ -15,9 +15,9 @@ project_root = os.path.dirname(
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from rag_minimal.mcp.server import MCPServer, JsonRpcRequest
-from rag_minimal.tools.registry import ToolRegistry
-from rag_minimal.tools.knowledge_search import KnowledgeSearchTool
+from rag_minimal.mcp.server import MCPServer, JsonRpcRequest  # noqa: E402
+from rag_minimal.tools.registry import ToolRegistry  # noqa: E402
+from rag_minimal.tools.knowledge_search import KnowledgeSearchTool  # noqa: E402
 
 
 def test_mcp_server():
@@ -95,7 +95,7 @@ def test_mcp_server():
         id=4,
     )
     resp = server.handle_request(req)
-    assert resp.result.get("isError") == True
+    assert resp.result.get("isError") is True
     print("  [OK] Error handling OK")
 
     # Test 5: Method not found

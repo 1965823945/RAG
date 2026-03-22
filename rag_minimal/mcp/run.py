@@ -19,9 +19,9 @@ project_root = os.path.dirname(
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from rag_minimal.mcp.server import MCPServer
-from rag_minimal.tools.registry import ToolRegistry
-from rag_minimal.tools.knowledge_search import KnowledgeSearchTool
+from rag_minimal.mcp.server import MCPServer  # noqa: E402
+from rag_minimal.tools.registry import ToolRegistry  # noqa: E402
+from rag_minimal.tools.knowledge_search import KnowledgeSearchTool  # noqa: E402
 
 
 def create_registry(docs_dir: str = "docs") -> ToolRegistry:

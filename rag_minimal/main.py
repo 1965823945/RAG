@@ -71,7 +71,7 @@ def main():
         print("-" * 40)
 
     print("\n演示完成!")
-    print(f"\n启动 Streamlit Web 界面: streamlit run rag_minimal/app.py")
+    print("\n启动 Streamlit Web 界面: streamlit run rag_minimal/app.py")
 
 
 if __name__ == "__main__":

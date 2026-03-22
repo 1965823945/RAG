@@ -1,5 +1,4 @@
 """Tests for rag_minimal package."""
-import pytest
 from rag_minimal.llm import SimpleLLM
 from rag_minimal.embeddings import FakeEmbeddings
 from rag_minimal.loader import load_pdfs

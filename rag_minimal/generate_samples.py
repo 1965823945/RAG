@@ -1,5 +1,4 @@
 """Generate sample PDFs for demo purposes."""
-import os
 from pathlib import Path
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter

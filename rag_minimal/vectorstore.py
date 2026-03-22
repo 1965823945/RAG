@@ -69,7 +69,7 @@ def create_vector_store(
             persist_directory=persist_directory,
         )
 
-        logger.info(f"Vector store created successfully")
+        logger.info("Vector store created successfully")
         return vector_store
 
     except PermissionError as e:

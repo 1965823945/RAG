@@ -9,12 +9,10 @@ Protocol spec: https://modelcontextprotocol.io/
 import json
 import sys
 import logging
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any, Dict, Optional, Callable
 from dataclasses import dataclass, field
 
 from rag_minimal.tools.registry import ToolRegistry
-from rag_minimal.tools.base import Tool
-from rag_minimal.schemas import ErrorCode
 
 
 # Configure logging to stderr (stdout is for JSON-RPC)
