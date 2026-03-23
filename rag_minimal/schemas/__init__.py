@@ -1,47 +1,57 @@
-"""Shared schemas for standardized tool interfaces.
+"""
+Schemas package for standardized tool interfaces.
 
-This module re-exports all schemas from the schemas package for backward compatibility.
-New code should import from rag_minimal.schemas (which resolves to the package).
+This package contains all Pydantic models organized by domain:
+- base: ErrorCode, ToolInput, ToolOutput
+- tools: Search, RAG, ToolMetadata, MultiTool schemas
+- planning: Task decomposition, Chain of thought, Self-reflection schemas
+- memory: Conversation, Message, Memory entry schemas
 """
 
-# Re-export everything from the schemas package
-from rag_minimal.schemas.base import ErrorCode, ToolInput, ToolOutput
-from rag_minimal.schemas.tools import (
+# Base schemas
+from .base import ErrorCode, ToolInput, ToolOutput
+
+# Tool schemas
+from .tools import (
+    MultiToolInput,
+    MultiToolOutput,
+    RAGInput,
+    RAGOutput,
     SearchInput,
     SearchOutput,
     SearchResultItem,
-    RAGInput,
-    RAGOutput,
-    ToolMetadata,
     ToolCallLog,
     ToolCallRequest,
     ToolCallResult,
-    MultiToolInput,
-    MultiToolOutput,
+    ToolMetadata,
 )
-from rag_minimal.schemas.planning import (
-    TaskStatus,
-    TaskPriority,
+
+# Planning schemas
+from .planning import (
+    ChainOfThoughtResult,
+    PlanningAgentOutput,
+    PlanningAgentState,
+    ReflectionItem,
+    ReflectionType,
+    SelfReflectionResult,
     SubTask,
     TaskDecomposition,
+    TaskPriority,
+    TaskStatus,
     ThoughtStep,
-    ChainOfThoughtResult,
-    ReflectionType,
-    ReflectionItem,
-    SelfReflectionResult,
-    PlanningAgentState,
-    PlanningAgentOutput,
 )
-from rag_minimal.schemas.memory import (
-    MessageRole,
-    Message,
+
+# Memory schemas
+from .memory import (
     Conversation,
-    MemoryType,
-    MemoryEntry,
-    MemorySearchResult,
-    ConversationContext,
     ConversationalInput,
     ConversationalOutput,
+    ConversationContext,
+    MemoryEntry,
+    MemorySearchResult,
+    MemoryType,
+    Message,
+    MessageRole,
 )
 
 __all__ = [
