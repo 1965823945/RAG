@@ -9,3 +9,16 @@ venv/
 env/
 *.venv
 venv*/
+
+# Coverage
+.coverage
+htmlcov/
+coverage.xml
+
+# Windows artifacts
+nul
+
+# IDE
+.idea/
+.vscode/
+*.swp
