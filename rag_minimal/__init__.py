@@ -11,6 +11,7 @@ This package provides a pluggable RAG system with:
 - Conversational AI with:
   - Multi-turn dialogue support
   - Memory system (short-term, long-term, working memory)
+- Unified configuration management
 """
 
 from rag_minimal.schemas import (
@@ -63,6 +64,13 @@ from rag_minimal.memory import (
     WorkingMemory,
     ConversationalAgent,
 )
+from rag_minimal.config import (
+    RAGSettings,
+    get_settings,
+    set_settings,
+    reset_settings,
+    configure,
+)
 
 __all__ = [
     # Schemas
@@ -112,6 +120,12 @@ __all__ = [
     "LongTermMemory",
     "WorkingMemory",
     "ConversationalAgent",
+    # Configuration
+    "RAGSettings",
+    "get_settings",
+    "set_settings",
+    "reset_settings",
+    "configure",
 ]
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
