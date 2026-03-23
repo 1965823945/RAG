@@ -1,5 +1,6 @@
 """Tests for AgentRuntime - Multi-tool invocation system."""
 
+import asyncio
 import time
 from typing import Any, Dict
 from pydantic import BaseModel, Field
@@ -527,3 +528,88 @@ class TestEdgeCases:
         """Test that max_workers configuration is respected."""
         runtime = AgentRuntime(docs_dir="docs", max_workers=2)
         assert runtime.max_workers == 2
+
+
+# ─────────────────────────────────────────────────────────────
+# Async Tests
+# ─────────────────────────────────────────────────────────────
+
+
+class TestAsyncInvocation:
+    """Tests for async tool invocation."""
+
+    async def test_ainvoke_tool_single(self):
+        """Test async single tool invocation."""
+        runtime = AgentRuntime(docs_dir="docs")
+        runtime.register_tool(CalculatorTool())
+
+        result = await runtime.ainvoke_tool("calculator", {"expression": "2 + 3"})
+
+        assert result.success is True
+        assert result.result["result"] == 5.0
+
+    async def test_ainvoke_tool_not_found(self):
+        """Test async invocation of non-existent tool."""
+        runtime = AgentRuntime(docs_dir="docs")
+
+        result = await runtime.ainvoke_tool("nonexistent", {})
+
+        assert result.success is False
+        assert result.error_code == ErrorCode.TOOL_NOT_FOUND
+
+    async def test_ainvoke_tools_parallel(self):
+        """Test async parallel tool invocation."""
+        runtime = AgentRuntime(docs_dir="docs")
+        runtime.register_tool(CalculatorTool())
+        runtime.register_tool(EchoTool())
+
+        calls = [
+            ToolCallRequest(tool_name="calculator", arguments={"expression": "10 * 5"}),
+            ToolCallRequest(tool_name="echo", arguments={"message": "async test"}),
+        ]
+
+        result = await runtime.ainvoke_tools(calls, parallel=True)
+
+        assert result.success is True
+        assert result.total_calls == 2
+        assert result.successful_calls == 2
+
+    async def test_ainvoke_tools_sequential(self):
+        """Test async sequential tool invocation."""
+        runtime = AgentRuntime(docs_dir="docs")
+        runtime.register_tool(CalculatorTool())
+
+        calls = [
+            ToolCallRequest(tool_name="calculator", arguments={"expression": "1 + 1"}),
+            ToolCallRequest(tool_name="calculator", arguments={"expression": "2 + 2"}),
+        ]
+
+        result = await runtime.ainvoke_tools(calls, parallel=False)
+
+        assert result.success is True
+        assert result.total_calls == 2
+
+    async def test_ainvoke_many(self):
+        """Test async invoke_many with same tool."""
+        runtime = AgentRuntime(docs_dir="docs")
+        runtime.register_tool(CalculatorTool())
+
+        args_list = [
+            {"expression": "1 + 1"},
+            {"expression": "2 + 2"},
+            {"expression": "3 + 3"},
+        ]
+
+        result = await runtime.ainvoke_many("calculator", args_list)
+
+        assert result.success is True
+        assert result.total_calls == 3
+
+    async def test_ainvoke_empty_calls(self):
+        """Test async invocation with empty calls list."""
+        runtime = AgentRuntime(docs_dir="docs")
+
+        result = await runtime.ainvoke_tools([])
+
+        assert result.success is False
+        assert result.error_code == ErrorCode.INVALID_INPUT
