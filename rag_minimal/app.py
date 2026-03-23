@@ -9,11 +9,12 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 import streamlit as st  # noqa: E402
+
 from rag_minimal.agent_runtime import AgentRuntime  # noqa: E402
-from rag_minimal.llm_config import create_llm, LLM_PROVIDERS  # noqa: E402
-from rag_minimal.planning import PlanningAgent  # noqa: E402
+from rag_minimal.llm_config import LLM_PROVIDERS, create_llm  # noqa: E402
 from rag_minimal.memory import ConversationalAgent  # noqa: E402
-from rag_minimal.schemas import TaskStatus, MessageRole  # noqa: E402
+from rag_minimal.planning import PlanningAgent  # noqa: E402
+from rag_minimal.schemas import MessageRole, TaskStatus  # noqa: E402
 
 
 @st.cache_resource
@@ -447,7 +448,7 @@ def main():
         if st.session_state.planning_history:
             st.divider()
             st.subheader("📜 规划历史")
-            for i, item in enumerate(reversed(st.session_state.planning_history[-3:])):
+            for _i, item in enumerate(reversed(st.session_state.planning_history[-3:])):
                 with st.expander(f"问题: {item['question'][:50]}...", expanded=False):
                     r = item["result"]
                     st.markdown(f"**答案:** {r.answer[:300]}...")

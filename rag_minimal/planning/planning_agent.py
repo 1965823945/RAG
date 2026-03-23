@@ -5,23 +5,24 @@ to create an autonomous agent capable of complex reasoning.
 """
 
 import uuid
-from typing import Optional, List, Dict, Any, Callable
+from collections.abc import Callable
 from datetime import datetime
+from typing import Any
 
 from langchain_core.language_models import BaseLLM
 
-from rag_minimal.schemas import (
-    TaskDecomposition,
-    TaskStatus,
-    ChainOfThoughtResult,
-    SelfReflectionResult,
-    PlanningAgentState,
-    PlanningAgentOutput,
-    SearchOutput,
-)
-from rag_minimal.planning.task_decomposer import TaskDecomposer
 from rag_minimal.planning.chain_of_thought import ChainOfThought
 from rag_minimal.planning.self_reflection import SelfReflection
+from rag_minimal.planning.task_decomposer import TaskDecomposer
+from rag_minimal.schemas import (
+    ChainOfThoughtResult,
+    PlanningAgentOutput,
+    PlanningAgentState,
+    SearchOutput,
+    SelfReflectionResult,
+    TaskDecomposition,
+    TaskStatus,
+)
 
 
 class PlanningAgent:
@@ -41,8 +42,8 @@ class PlanningAgent:
 
     def __init__(
         self,
-        llm: Optional[BaseLLM] = None,
-        search_func: Optional[Callable[[str, int], SearchOutput]] = None,
+        llm: BaseLLM | None = None,
+        search_func: Callable[[str, int], SearchOutput] | None = None,
         quality_threshold: float = 0.6,
         max_iterations: int = 3,
         verbose: bool = False,
@@ -216,8 +217,8 @@ class PlanningAgent:
         query: str,
         context: str,
         use_react: bool = False,
-        previous_answer: Optional[str] = None,
-        improvements: Optional[List[str]] = None,
+        previous_answer: str | None = None,
+        improvements: list[str] | None = None,
     ) -> ChainOfThoughtResult:
         """Perform chain of thought reasoning."""
         # Enhance context with previous answer and improvements if available
@@ -238,7 +239,7 @@ class PlanningAgent:
         self,
         query: str,
         answer: str,
-        reasoning: Optional[ChainOfThoughtResult],
+        reasoning: ChainOfThoughtResult | None,
     ) -> SelfReflectionResult:
         """Reflect on the generated answer."""
         return self.reflection.reflect(
@@ -304,7 +305,7 @@ class PlanningAgent:
         except Exception as e:
             return f"生成回答时出错: {e}"
 
-    def _execute_tool(self, tool_name: str, tool_input: Dict[str, Any]) -> str:
+    def _execute_tool(self, tool_name: str, tool_input: dict[str, Any]) -> str:
         """Execute a tool (for ReAct reasoning)."""
         if tool_name == "knowledge_search" and self.search_func:
             query = tool_input.get("query", tool_input.get("input", ""))
@@ -435,7 +436,7 @@ class PlanningAgent:
         self,
         query: str,
         answer: str,
-        reasoning: Optional[ChainOfThoughtResult] = None,
+        reasoning: ChainOfThoughtResult | None = None,
     ) -> SelfReflectionResult:
         """Only perform self-reflection."""
         return self.reflection.reflect(query, answer, reasoning)

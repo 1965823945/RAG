@@ -3,12 +3,12 @@
 These tools serve as examples and can be used to test multi-tool invocation.
 """
 
-from typing import Any, Dict, List
+from typing import Any
+
 from pydantic import BaseModel, Field
 
-from rag_minimal.tools.base import Tool
 from rag_minimal.schemas import ToolOutput
-
+from rag_minimal.tools.base import Tool
 
 # ─────────────────────────────────────────────────────────────
 # Calculator Tool
@@ -61,7 +61,7 @@ class CalculatorTool(Tool):
         "pow": pow,
     }
 
-    def invoke(self, payload: Dict[str, Any]) -> CalculatorOutput:
+    def invoke(self, payload: dict[str, Any]) -> CalculatorOutput:
         """Evaluate the mathematical expression."""
         validated = self.validate_input(payload)
         expression = validated.expression
@@ -125,7 +125,7 @@ class EchoTool(Tool):
     input_schema = EchoInput
     output_schema = EchoOutput
 
-    def invoke(self, payload: Dict[str, Any]) -> EchoOutput:
+    def invoke(self, payload: dict[str, Any]) -> EchoOutput:
         """Echo the message."""
         validated = self.validate_input(payload)
 
@@ -197,7 +197,7 @@ class TextTransformTool(Tool):
         "length": lambda x: str(len(x)),
     }
 
-    def invoke(self, payload: Dict[str, Any]) -> TextTransformOutput:
+    def invoke(self, payload: dict[str, Any]) -> TextTransformOutput:
         """Transform the text."""
         validated = self.validate_input(payload)
 
@@ -229,9 +229,9 @@ class TextTransformTool(Tool):
 class ListAggregatorInput(BaseModel):
     """Input for list aggregator tool."""
 
-    items: List[str] = Field(default_factory=list, description="Items to aggregate")
+    items: list[str] = Field(default_factory=list, description="Items to aggregate")
     separator: str = Field(default=", ", description="Separator between items")
-    result: Dict[str, Any] = Field(
+    result: dict[str, Any] = Field(
         default_factory=dict, description="Previous result (for chaining)"
     )
 
@@ -242,7 +242,7 @@ class ListAggregatorInput(BaseModel):
 class ListAggregatorOutput(ToolOutput):
     """Output from list aggregator tool."""
 
-    items: List[str] = Field(default_factory=list, description="Input items")
+    items: list[str] = Field(default_factory=list, description="Input items")
     aggregated: str = Field(default="", description="Aggregated string")
     count: int = Field(default=0, description="Number of items")
 
@@ -260,7 +260,7 @@ class ListAggregatorTool(Tool):
     input_schema = ListAggregatorInput
     output_schema = ListAggregatorOutput
 
-    def invoke(self, payload: Dict[str, Any]) -> ListAggregatorOutput:
+    def invoke(self, payload: dict[str, Any]) -> ListAggregatorOutput:
         """Aggregate the items."""
         validated = self.validate_input(payload)
 

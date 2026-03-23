@@ -5,16 +5,16 @@ Implements step-by-step reasoning with explicit thought tracking.
 
 import json
 import re
-from typing import Optional, List, Dict, Any, Callable
+from collections.abc import Callable
 from datetime import datetime
+from typing import Any
 
 from langchain_core.language_models import BaseLLM
 
 from rag_minimal.schemas import (
-    ThoughtStep,
     ChainOfThoughtResult,
+    ThoughtStep,
 )
-
 
 # Chain of Thought prompt template
 COT_PROMPT = """你是一个善于逐步推理的助手。请使用思维链方法来回答问题。
@@ -82,9 +82,9 @@ class ChainOfThought:
 
     def __init__(
         self,
-        llm: Optional[BaseLLM] = None,
+        llm: BaseLLM | None = None,
         max_steps: int = 10,
-        tool_executor: Optional[Callable[[str, Dict[str, Any]], str]] = None,
+        tool_executor: Callable[[str, dict[str, Any]], str] | None = None,
     ):
         """Initialize the Chain of Thought reasoner.
 
@@ -102,7 +102,7 @@ class ChainOfThought:
         question: str,
         context: str = "",
         use_react: bool = False,
-        available_tools: Optional[List[Dict[str, Any]]] = None,
+        available_tools: list[dict[str, Any]] | None = None,
     ) -> ChainOfThoughtResult:
         """Perform chain of thought reasoning.
 
@@ -157,11 +157,11 @@ class ChainOfThought:
         self,
         question: str,
         context: str,
-        available_tools: List[Dict[str, Any]],
+        available_tools: list[dict[str, Any]],
     ) -> ChainOfThoughtResult:
         """Use ReAct-style reasoning with tool execution."""
         tools_desc = self._format_tools(available_tools)
-        thoughts: List[ThoughtStep] = []
+        thoughts: list[ThoughtStep] = []
         step_number = 0
 
         # Initial prompt
@@ -289,7 +289,7 @@ class ChainOfThought:
 
         Performs structured reasoning based on question type.
         """
-        thoughts: List[ThoughtStep] = []
+        thoughts: list[ThoughtStep] = []
         timestamp = datetime.now().isoformat()
 
         # Step 1: Understand the question
@@ -358,7 +358,7 @@ class ChainOfThought:
 
     def _parse_cot_response(self, question: str, response: str) -> ChainOfThoughtResult:
         """Parse chain of thought response from LLM."""
-        thoughts: List[ThoughtStep] = []
+        thoughts: list[ThoughtStep] = []
 
         # Extract thinking steps
         step_pattern = r"思考步骤(\d+):\s*(.+?)(?=思考步骤\d+:|最终答案:|$)"
@@ -451,7 +451,7 @@ class ChainOfThought:
         # In real usage, this would use the LLM
         return f"根据提供的信息，关于「{question[:20]}...」的回答：{context[:200]}..."
 
-    def _format_tools(self, tools: List[Dict[str, Any]]) -> str:
+    def _format_tools(self, tools: list[dict[str, Any]]) -> str:
         """Format tools description for prompt."""
         if not tools:
             return "无可用工具"
@@ -463,7 +463,7 @@ class ChainOfThought:
             lines.append(f"- {name}: {desc}")
         return "\n".join(lines)
 
-    def _estimate_confidence(self, thoughts: List[ThoughtStep]) -> float:
+    def _estimate_confidence(self, thoughts: list[ThoughtStep]) -> float:
         """Estimate confidence based on reasoning chain."""
         if not thoughts:
             return 0.0
@@ -482,7 +482,7 @@ class ChainOfThought:
     def _extract_conclusion(
         self,
         response: str,
-        thoughts: List[ThoughtStep],
+        thoughts: list[ThoughtStep],
     ) -> str:
         """Extract conclusion from response or thoughts."""
         # Try to find explicit final answer

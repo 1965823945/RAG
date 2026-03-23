@@ -1,21 +1,21 @@
 """Conversational Agent - Agent with memory and multi-turn dialogue support."""
 
-from typing import Optional, List, Dict, Any, Callable
+from collections.abc import Callable
 from datetime import datetime
+from typing import Any
 
 from langchain_core.language_models import BaseLLM
 
-from rag_minimal.schemas import (
-    MessageRole,
-    Conversation,
-    ConversationalOutput,
-    SearchOutput,
-    SearchResultItem,
-    MemoryType,
-)
 from rag_minimal.memory.conversation import ConversationManager
 from rag_minimal.memory.memory_system import MemorySystem
-
+from rag_minimal.schemas import (
+    Conversation,
+    ConversationalOutput,
+    MemoryType,
+    MessageRole,
+    SearchOutput,
+    SearchResultItem,
+)
 
 # Prompt templates
 CONVERSATIONAL_SYSTEM_PROMPT = """你是一个智能助手，能够进行多轮对话并记住之前的上下文。
@@ -56,9 +56,9 @@ class ConversationalAgent:
 
     def __init__(
         self,
-        llm: Optional[BaseLLM] = None,
-        search_func: Optional[Callable[[str, int], SearchOutput]] = None,
-        persist_dir: Optional[str] = None,
+        llm: BaseLLM | None = None,
+        search_func: Callable[[str, int], SearchOutput] | None = None,
+        persist_dir: str | None = None,
         max_history_messages: int = 20,
         max_context_tokens: int = 4000,
         auto_extract_memories: bool = True,
@@ -95,7 +95,7 @@ class ConversationalAgent:
     def chat(
         self,
         message: str,
-        conversation_id: Optional[str] = None,
+        conversation_id: str | None = None,
         top_k: int = 3,
         include_history: bool = True,
         include_memories: bool = True,
@@ -138,7 +138,7 @@ class ConversationalAgent:
         messages_used = 0
         memories_used = 0
         documents_used = 0
-        sources: List[SearchResultItem] = []
+        sources: list[SearchResultItem] = []
 
         # 1. Add conversation history
         if include_history:
@@ -303,7 +303,7 @@ class ConversationalAgent:
 
         return query
 
-    def _extract_entities_mentioned(self, text: str) -> Dict[str, str]:
+    def _extract_entities_mentioned(self, text: str) -> dict[str, str]:
         """Extract entities mentioned in text."""
         entities = {}
         import re
@@ -323,11 +323,11 @@ class ConversationalAgent:
 
         return entities
 
-    def get_conversation(self, conversation_id: str) -> Optional[Conversation]:
+    def get_conversation(self, conversation_id: str) -> Conversation | None:
         """Get a conversation by ID."""
         return self.conversations.get_conversation(conversation_id)
 
-    def list_conversations(self, limit: int = 20) -> List[Conversation]:
+    def list_conversations(self, limit: int = 20) -> list[Conversation]:
         """List recent conversations."""
         return self.conversations.list_conversations(limit=limit)
 
@@ -339,7 +339,7 @@ class ConversationalAgent:
         """Clear a conversation's messages."""
         return self.conversations.clear_conversation(conversation_id)
 
-    def get_memory_summary(self) -> Dict[str, Any]:
+    def get_memory_summary(self) -> dict[str, Any]:
         """Get memory system summary."""
         return self.memory.get_summary()
 
@@ -369,7 +369,7 @@ class ConversationalAgent:
         self,
         query: str,
         limit: int = 10,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search memories.
 
         Args:
@@ -393,7 +393,7 @@ class ConversationalAgent:
     def summarize_conversation(
         self,
         conversation_id: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Generate and store a conversation summary.
 
         Args:
@@ -456,7 +456,7 @@ class ConversationalAgent:
     def get_context_for_message(
         self,
         message: str,
-        conversation_id: Optional[str] = None,
+        conversation_id: str | None = None,
         include_history: bool = True,
         include_memories: bool = True,
     ) -> str:
@@ -498,7 +498,7 @@ class ConversationalAgent:
         self,
         conversation_id: str,
         format: str = "text",
-    ) -> Optional[str]:
+    ) -> str | None:
         """Export a conversation.
 
         Args:

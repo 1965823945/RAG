@@ -1,13 +1,13 @@
 """Improved chunker with better text splitting for Chinese."""
 
-from typing import List
+
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 def chunk_documents(
-    documents: List[Document], chunk_size: int = 400, chunk_overlap: int = 50
-) -> List[Document]:
+    documents: list[Document], chunk_size: int = 400, chunk_overlap: int = 50
+) -> list[Document]:
     """Split documents into smaller chunks with better boundaries for Chinese."""
     if not documents:
         return []

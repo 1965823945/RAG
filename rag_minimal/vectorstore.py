@@ -1,9 +1,10 @@
 """Vector store module using ChromaDB."""
 
-import os
 import logging
-from typing import List, Optional
+import os
+
 from langchain_core.documents import Document
+
 from rag_minimal.embeddings import FakeEmbeddings
 
 logger = logging.getLogger(__name__)
@@ -34,9 +35,9 @@ class VectorStoreLoadError(VectorStoreError):
 
 
 def create_vector_store(
-    documents: List[Document],
+    documents: list[Document],
     persist_directory: str = "chroma_db",
-    embeddings: Optional[FakeEmbeddings] = None,
+    embeddings: FakeEmbeddings | None = None,
 ) -> ChromaDB:
     """Create a Chroma vector store from documents.
 
@@ -81,8 +82,8 @@ def create_vector_store(
 
 
 def load_vector_store(
-    persist_directory: str = "chroma_db", embeddings: Optional[FakeEmbeddings] = None
-) -> Optional[ChromaDB]:
+    persist_directory: str = "chroma_db", embeddings: FakeEmbeddings | None = None
+) -> ChromaDB | None:
     """Load an existing Chroma vector store.
 
     Args:

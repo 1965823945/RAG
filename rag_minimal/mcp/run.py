@@ -9,8 +9,8 @@ Tools registered in the ToolRegistry will be exposed via MCP protocol.
 """
 
 import argparse
-import sys
 import os
+import sys
 
 # Add project root to path
 project_root = os.path.dirname(
@@ -20,8 +20,8 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from rag_minimal.mcp.server import MCPServer  # noqa: E402
-from rag_minimal.tools.registry import ToolRegistry  # noqa: E402
 from rag_minimal.tools.knowledge_search import KnowledgeSearchTool  # noqa: E402
+from rag_minimal.tools.registry import ToolRegistry  # noqa: E402
 
 
 def create_registry(docs_dir: str = "docs") -> ToolRegistry:

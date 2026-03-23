@@ -5,17 +5,15 @@ Breaks down complex tasks into manageable subtasks with dependencies.
 
 import json
 import re
-from typing import Optional, List
 
 from langchain_core.language_models import BaseLLM
 
 from rag_minimal.schemas import (
-    TaskDecomposition,
     SubTask,
-    TaskStatus,
+    TaskDecomposition,
     TaskPriority,
+    TaskStatus,
 )
-
 
 # Prompt template for task decomposition
 DECOMPOSITION_PROMPT = """你是一个任务分解专家。请将用户的复杂任务分解为可执行的子任务。
@@ -44,7 +42,7 @@ DECOMPOSITION_PROMPT = """你是一个任务分解专家。请将用户的复杂
             "dependencies": []
         }},
         {{
-            "id": "task_2", 
+            "id": "task_2",
             "description": "另一个子任务",
             "priority": "medium",
             "dependencies": ["task_1"]
@@ -66,7 +64,7 @@ class TaskDecomposer:
     4. Complexity assessment
     """
 
-    def __init__(self, llm: Optional[BaseLLM] = None):
+    def __init__(self, llm: BaseLLM | None = None):
         """Initialize the task decomposer.
 
         Args:
@@ -205,7 +203,7 @@ class TaskDecomposer:
         creation_words = ["创建", "生成", "编写", "设计", "制作", "开发", "实现"]
         return any(word in task for word in creation_words)
 
-    def _decompose_question(self, task: str) -> List[SubTask]:
+    def _decompose_question(self, task: str) -> list[SubTask]:
         """Decompose a question-type task."""
         return [
             SubTask(
@@ -234,7 +232,7 @@ class TaskDecomposer:
             ),
         ]
 
-    def _decompose_comparison(self, task: str) -> List[SubTask]:
+    def _decompose_comparison(self, task: str) -> list[SubTask]:
         """Decompose a comparison-type task."""
         return [
             SubTask(
@@ -275,7 +273,7 @@ class TaskDecomposer:
             ),
         ]
 
-    def _decompose_analysis(self, task: str) -> List[SubTask]:
+    def _decompose_analysis(self, task: str) -> list[SubTask]:
         """Decompose an analysis-type task."""
         return [
             SubTask(
@@ -310,7 +308,7 @@ class TaskDecomposer:
             ),
         ]
 
-    def _decompose_creation(self, task: str) -> List[SubTask]:
+    def _decompose_creation(self, task: str) -> list[SubTask]:
         """Decompose a creation-type task."""
         return [
             SubTask(
@@ -345,7 +343,7 @@ class TaskDecomposer:
             ),
         ]
 
-    def _decompose_general(self, task: str) -> List[SubTask]:
+    def _decompose_general(self, task: str) -> list[SubTask]:
         """Decompose a general task."""
         return [
             SubTask(
@@ -374,7 +372,7 @@ class TaskDecomposer:
             ),
         ]
 
-    def _parse_json_response(self, response: str) -> Optional[dict]:
+    def _parse_json_response(self, response: str) -> dict | None:
         """Parse JSON from LLM response."""
         # Try to find JSON block
         json_match = re.search(r"```json\s*(.*?)\s*```", response, re.DOTALL)
@@ -420,7 +418,7 @@ class TaskDecomposer:
         else:
             return "5-10分钟"
 
-    def get_execution_order(self, decomposition: TaskDecomposition) -> List[List[str]]:
+    def get_execution_order(self, decomposition: TaskDecomposition) -> list[list[str]]:
         """Get the execution order respecting dependencies.
 
         Returns a list of lists, where each inner list contains

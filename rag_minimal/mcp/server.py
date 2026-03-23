@@ -7,13 +7,13 @@ Protocol spec: https://modelcontextprotocol.io/
 """
 
 import json
-import sys
 import logging
-from typing import Any, Dict, Optional, Callable
+import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Any
 
 from rag_minimal.tools.registry import ToolRegistry
-
 
 # Configure logging to stderr (stdout is for JSON-RPC)
 logging.basicConfig(
@@ -34,8 +34,8 @@ class JsonRpcRequest:
     """JSON-RPC 2.0 Request."""
 
     method: str
-    params: Dict[str, Any] = field(default_factory=dict)
-    id: Optional[int | str] = None
+    params: dict[str, Any] = field(default_factory=dict)
+    id: int | str | None = None
     jsonrpc: str = "2.0"
 
 
@@ -43,12 +43,12 @@ class JsonRpcRequest:
 class JsonRpcResponse:
     """JSON-RPC 2.0 Response."""
 
-    id: Optional[int | str]
-    result: Optional[Any] = None
-    error: Optional[Dict[str, Any]] = None
+    id: int | str | None
+    result: Any | None = None
+    error: dict[str, Any] | None = None
     jsonrpc: str = "2.0"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = {"jsonrpc": self.jsonrpc, "id": self.id}
         if self.error is not None:
             d["error"] = self.error
@@ -88,7 +88,7 @@ class MCPServer:
             registry: ToolRegistry containing tools to expose
         """
         self.registry = registry
-        self._handlers: Dict[str, Callable] = {
+        self._handlers: dict[str, Callable] = {
             "initialize": self._handle_initialize,
             "initialized": self._handle_initialized,
             "tools/list": self._handle_tools_list,
@@ -96,7 +96,7 @@ class MCPServer:
             "ping": self._handle_ping,
         }
 
-    def _handle_initialize(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_initialize(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle initialize request."""
         logger.info(f"Client initializing: {params.get('clientInfo', {})}")
         return {
@@ -110,16 +110,16 @@ class MCPServer:
             },
         }
 
-    def _handle_initialized(self, params: Dict[str, Any]) -> None:
+    def _handle_initialized(self, params: dict[str, Any]) -> None:
         """Handle initialized notification."""
         logger.info("Client initialized successfully")
         return None
 
-    def _handle_ping(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_ping(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle ping request."""
         return {}
 
-    def _handle_tools_list(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_tools_list(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle tools/list request.
 
         Returns list of available tools in MCP format.
@@ -131,7 +131,7 @@ class MCPServer:
         logger.info(f"Listed {len(tools)} tools")
         return {"tools": tools}
 
-    def _handle_tools_call(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_tools_call(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle tools/call request.
 
         Invokes the specified tool and returns the result.
@@ -193,7 +193,7 @@ class MCPServer:
                 "isError": True,
             }
 
-    def handle_request(self, request: JsonRpcRequest) -> Optional[JsonRpcResponse]:
+    def handle_request(self, request: JsonRpcRequest) -> JsonRpcResponse | None:
         """Handle a single JSON-RPC request.
 
         Args:

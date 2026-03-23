@@ -1,8 +1,7 @@
 """Document loader module - supports Word and PDF documents."""
 
-import os
 import logging
-from typing import List
+import os
 
 from langchain_core.documents import Document
 
@@ -24,7 +23,7 @@ except ImportError:
     _DOCX_AVAILABLE = False
 
 
-def load_documents(doc_dir: str = "docs") -> List[Document]:
+def load_documents(doc_dir: str = "docs") -> list[Document]:
     """Load all documents (Word and PDF) from the specified directory.
 
     Args:
@@ -71,6 +70,6 @@ def load_documents(doc_dir: str = "docs") -> List[Document]:
 
 
 # Backward compatibility alias
-def load_pdfs(pdf_dir: str = "docs") -> List[Document]:
+def load_pdfs(pdf_dir: str = "docs") -> list[Document]:
     """Load PDFs from directory (backward compatibility)."""
     return load_documents(pdf_dir)

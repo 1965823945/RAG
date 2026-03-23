@@ -6,19 +6,20 @@ Provides a hierarchical memory system for the conversational agent:
 3. WorkingMemory - Active context for current query
 """
 
-import uuid
+import hashlib
 import json
 import re
-import hashlib
-from typing import Optional, List, Dict, Any, Callable
+import uuid
+from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
-from collections import defaultdict
+from typing import Any
 
 from rag_minimal.schemas import (
     MemoryEntry,
-    MemoryType,
     MemorySearchResult,
+    MemoryType,
     Message,
     MessageRole,
 )
@@ -44,16 +45,16 @@ class ShortTermMemory:
         """
         self.capacity = capacity
         self.ttl_minutes = ttl_minutes
-        self._entries: Dict[str, MemoryEntry] = {}
-        self._access_order: List[str] = []  # LRU tracking
+        self._entries: dict[str, MemoryEntry] = {}
+        self._access_order: list[str] = []  # LRU tracking
 
     def add(
         self,
         content: str,
         memory_type: MemoryType = MemoryType.CONTEXT,
         importance: float = 0.5,
-        source_conversation_id: Optional[str] = None,
-        source_message_id: Optional[str] = None,
+        source_conversation_id: str | None = None,
+        source_message_id: str | None = None,
     ) -> MemoryEntry:
         """Add an entry to short-term memory.
 
@@ -93,7 +94,7 @@ class ShortTermMemory:
 
         return entry
 
-    def get(self, entry_id: str) -> Optional[MemoryEntry]:
+    def get(self, entry_id: str) -> MemoryEntry | None:
         """Get a memory entry and update access info."""
         entry = self._entries.get(entry_id)
         if entry:
@@ -109,8 +110,8 @@ class ShortTermMemory:
         self,
         query: str,
         limit: int = 5,
-        memory_types: Optional[List[MemoryType]] = None,
-    ) -> List[MemorySearchResult]:
+        memory_types: list[MemoryType] | None = None,
+    ) -> list[MemorySearchResult]:
         """Search short-term memory by keyword matching.
 
         Args:
@@ -170,7 +171,7 @@ class ShortTermMemory:
         results.sort(key=lambda r: r.relevance_score, reverse=True)
         return results[:limit]
 
-    def get_recent(self, limit: int = 10) -> List[MemoryEntry]:
+    def get_recent(self, limit: int = 10) -> list[MemoryEntry]:
         """Get most recent entries."""
         self._cleanup_expired()
         entries = list(self._entries.values())
@@ -207,7 +208,7 @@ class ShortTermMemory:
             if entry_id in self._access_order:
                 self._access_order.remove(entry_id)
 
-    def _extract_keywords(self, text: str) -> List[str]:
+    def _extract_keywords(self, text: str) -> list[str]:
         """Extract keywords from text."""
         # Chinese and English words
         words = re.findall(r"[\u4e00-\u9fff]{2,}|[a-zA-Z]{3,}", text.lower())
@@ -223,8 +224,8 @@ class LongTermMemory:
 
     def __init__(
         self,
-        persist_dir: Optional[str] = None,
-        embedding_func: Optional[Callable[[str], List[float]]] = None,
+        persist_dir: str | None = None,
+        embedding_func: Callable[[str], list[float]] | None = None,
     ):
         """Initialize long-term memory.
 
@@ -235,11 +236,11 @@ class LongTermMemory:
         self.persist_dir = Path(persist_dir) if persist_dir else None
         self.embedding_func = embedding_func
 
-        self._entries: Dict[str, MemoryEntry] = {}
-        self._entity_index: Dict[str, List[str]] = defaultdict(
+        self._entries: dict[str, MemoryEntry] = {}
+        self._entity_index: dict[str, list[str]] = defaultdict(
             list
         )  # entity -> entry_ids
-        self._type_index: Dict[MemoryType, List[str]] = defaultdict(
+        self._type_index: dict[MemoryType, list[str]] = defaultdict(
             list
         )  # type -> entry_ids
 
@@ -252,10 +253,10 @@ class LongTermMemory:
         content: str,
         memory_type: MemoryType,
         importance: float = 0.5,
-        entity_name: Optional[str] = None,
-        entity_type: Optional[str] = None,
-        source_conversation_id: Optional[str] = None,
-        source_message_id: Optional[str] = None,
+        entity_name: str | None = None,
+        entity_type: str | None = None,
+        source_conversation_id: str | None = None,
+        source_message_id: str | None = None,
     ) -> MemoryEntry:
         """Add an entry to long-term memory.
 
@@ -378,7 +379,7 @@ class LongTermMemory:
             source_conversation_id=source_conversation_id,
         )
 
-    def get(self, entry_id: str) -> Optional[MemoryEntry]:
+    def get(self, entry_id: str) -> MemoryEntry | None:
         """Get a memory entry."""
         entry = self._entries.get(entry_id)
         if entry:
@@ -391,9 +392,9 @@ class LongTermMemory:
         self,
         query: str,
         limit: int = 5,
-        memory_types: Optional[List[MemoryType]] = None,
+        memory_types: list[MemoryType] | None = None,
         min_importance: float = 0.0,
-    ) -> List[MemorySearchResult]:
+    ) -> list[MemorySearchResult]:
         """Search long-term memory.
 
         Args:
@@ -458,7 +459,7 @@ class LongTermMemory:
         results.sort(key=lambda r: r.relevance_score, reverse=True)
         return results[:limit]
 
-    def search_by_entity(self, entity_name: str) -> List[MemoryEntry]:
+    def search_by_entity(self, entity_name: str) -> list[MemoryEntry]:
         """Search memories by entity name."""
         entry_ids = self._entity_index.get(entity_name.lower(), [])
         return [self._entries[eid] for eid in entry_ids if eid in self._entries]
@@ -467,7 +468,7 @@ class LongTermMemory:
         self,
         memory_type: MemoryType,
         limit: int = 20,
-    ) -> List[MemoryEntry]:
+    ) -> list[MemoryEntry]:
         """Get memories by type."""
         entry_ids = self._type_index.get(memory_type, [])
         entries = [self._entries[eid] for eid in entry_ids if eid in self._entries]
@@ -508,7 +509,7 @@ class LongTermMemory:
         """Generate hash for content deduplication."""
         return hashlib.md5(content.encode()).hexdigest()
 
-    def _extract_keywords(self, text: str) -> List[str]:
+    def _extract_keywords(self, text: str) -> list[str]:
         """Extract keywords from text."""
         words = re.findall(r"[\u4e00-\u9fff]{2,}|[a-zA-Z]{3,}", text.lower())
         return words
@@ -538,7 +539,7 @@ class LongTermMemory:
             return
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 data = json.load(f)
 
             for entry_id, entry_data in data.get("entries", {}).items():
@@ -572,26 +573,26 @@ class WorkingMemory:
             max_context_tokens: Maximum tokens for context
         """
         self.max_context_tokens = max_context_tokens
-        self._current_query: Optional[str] = None
-        self._conversation_context: List[Message] = []
-        self._relevant_memories: List[MemoryEntry] = []
-        self._retrieved_docs: List[Any] = []
-        self._entities: Dict[str, str] = {}
-        self._facts: List[str] = []
+        self._current_query: str | None = None
+        self._conversation_context: list[Message] = []
+        self._relevant_memories: list[MemoryEntry] = []
+        self._retrieved_docs: list[Any] = []
+        self._entities: dict[str, str] = {}
+        self._facts: list[str] = []
 
     def set_query(self, query: str) -> None:
         """Set the current query."""
         self._current_query = query
 
-    def add_conversation_context(self, messages: List[Message]) -> None:
+    def add_conversation_context(self, messages: list[Message]) -> None:
         """Add conversation history to working memory."""
         self._conversation_context = messages
 
-    def add_memories(self, memories: List[MemoryEntry]) -> None:
+    def add_memories(self, memories: list[MemoryEntry]) -> None:
         """Add relevant memories to working memory."""
         self._relevant_memories = memories
 
-    def add_documents(self, docs: List[Any]) -> None:
+    def add_documents(self, docs: list[Any]) -> None:
         """Add retrieved documents."""
         self._retrieved_docs = docs
 
@@ -604,7 +605,7 @@ class WorkingMemory:
         if fact not in self._facts:
             self._facts.append(fact)
 
-    def get_context_string(self, max_tokens: Optional[int] = None) -> str:
+    def get_context_string(self, max_tokens: int | None = None) -> str:
         """Build context string from working memory.
 
         Args:
@@ -691,11 +692,11 @@ class MemorySystem:
 
     def __init__(
         self,
-        persist_dir: Optional[str] = None,
+        persist_dir: str | None = None,
         short_term_capacity: int = 50,
         short_term_ttl: int = 60,
         max_context_tokens: int = 4000,
-        embedding_func: Optional[Callable[[str], List[float]]] = None,
+        embedding_func: Callable[[str], list[float]] | None = None,
     ):
         """Initialize the memory system.
 
@@ -757,10 +758,10 @@ class MemorySystem:
         self,
         query: str,
         limit: int = 10,
-        memory_types: Optional[List[MemoryType]] = None,
+        memory_types: list[MemoryType] | None = None,
         include_short_term: bool = True,
         include_long_term: bool = True,
-    ) -> List[MemorySearchResult]:
+    ) -> list[MemorySearchResult]:
         """Recall relevant memories.
 
         Args:
@@ -801,8 +802,8 @@ class MemorySystem:
     def prepare_context(
         self,
         query: str,
-        conversation_messages: Optional[List[Message]] = None,
-        retrieved_docs: Optional[List[Any]] = None,
+        conversation_messages: list[Message] | None = None,
+        retrieved_docs: list[Any] | None = None,
     ) -> str:
         """Prepare context for the current query.
 
@@ -833,9 +834,9 @@ class MemorySystem:
         self,
         message: str,
         is_user: bool = True,
-        conversation_id: Optional[str] = None,
-        message_id: Optional[str] = None,
-    ) -> List[MemoryEntry]:
+        conversation_id: str | None = None,
+        message_id: str | None = None,
+    ) -> list[MemoryEntry]:
         """Extract and store memories from a message.
 
         Args:
@@ -888,7 +889,7 @@ class MemorySystem:
 
         return extracted
 
-    def _extract_preferences(self, message: str) -> List[str]:
+    def _extract_preferences(self, message: str) -> list[str]:
         """Extract user preferences from message."""
         preferences = []
 
@@ -910,7 +911,7 @@ class MemorySystem:
 
         return preferences
 
-    def _extract_entities(self, message: str) -> Dict[str, str]:
+    def _extract_entities(self, message: str) -> dict[str, str]:
         """Extract entities from message."""
         entities = {}
 
@@ -931,7 +932,7 @@ class MemorySystem:
 
         return entities
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get a summary of memory system state."""
         return {
             "short_term_count": len(self.short_term._entries),

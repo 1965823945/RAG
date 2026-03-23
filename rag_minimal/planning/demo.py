@@ -9,10 +9,10 @@ Run: python -m rag_minimal.planning.demo
 """
 
 from rag_minimal.planning import (
-    TaskDecomposer,
     ChainOfThought,
-    SelfReflection,
     PlanningAgent,
+    SelfReflection,
+    TaskDecomposer,
 )
 from rag_minimal.schemas import SearchOutput, SearchResultItem
 

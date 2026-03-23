@@ -1,20 +1,20 @@
 """Tests for Planning Agent module."""
 
 from rag_minimal.planning import (
-    TaskDecomposer,
     ChainOfThought,
-    SelfReflection,
     PlanningAgent,
+    SelfReflection,
+    TaskDecomposer,
 )
 from rag_minimal.schemas import (
-    TaskStatus,
-    TaskPriority,
-    TaskDecomposition,
     ChainOfThoughtResult,
-    SelfReflectionResult,
     ReflectionType,
     SearchOutput,
     SearchResultItem,
+    SelfReflectionResult,
+    TaskDecomposition,
+    TaskPriority,
+    TaskStatus,
 )
 
 

@@ -1,7 +1,8 @@
 """Base tool interface with JSON Schema support."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Type, List, Optional
+from typing import Any
+
 from pydantic import BaseModel
 
 from rag_minimal.schemas import ToolMetadata
@@ -23,12 +24,12 @@ class Tool(ABC):
     name: str
     description: str
     version: str = "1.0.0"
-    tags: Optional[List[str]] = None  # Avoid mutable default argument
-    input_schema: Type[BaseModel]
-    output_schema: Type[BaseModel]
+    tags: list[str] | None = None  # Avoid mutable default argument
+    input_schema: type[BaseModel]
+    output_schema: type[BaseModel]
 
     @abstractmethod
-    def invoke(self, payload: Dict[str, Any]) -> BaseModel:
+    def invoke(self, payload: dict[str, Any]) -> BaseModel:
         """Execute the tool with validated input.
 
         Args:
@@ -39,7 +40,7 @@ class Tool(ABC):
         """
         raise NotImplementedError
 
-    def get_input_json_schema(self) -> Dict[str, Any]:
+    def get_input_json_schema(self) -> dict[str, Any]:
         """Get JSON Schema for tool input.
 
         Returns:
@@ -47,7 +48,7 @@ class Tool(ABC):
         """
         return self.input_schema.model_json_schema()
 
-    def get_output_json_schema(self) -> Dict[str, Any]:
+    def get_output_json_schema(self) -> dict[str, Any]:
         """Get JSON Schema for tool output.
 
         Returns:
@@ -70,7 +71,7 @@ class Tool(ABC):
             tags=getattr(self, "tags", None) or [],
         )
 
-    def to_openai_function(self) -> Dict[str, Any]:
+    def to_openai_function(self) -> dict[str, Any]:
         """Export as OpenAI function calling format.
 
         Returns:
@@ -90,7 +91,7 @@ class Tool(ABC):
             "parameters": input_schema,
         }
 
-    def to_mcp_tool(self) -> Dict[str, Any]:
+    def to_mcp_tool(self) -> dict[str, Any]:
         """Export as MCP tool format.
 
         Returns:
@@ -102,7 +103,7 @@ class Tool(ABC):
             "inputSchema": self.get_input_json_schema(),
         }
 
-    def validate_input(self, payload: Dict[str, Any]) -> BaseModel:
+    def validate_input(self, payload: dict[str, Any]) -> BaseModel:
         """Validate input against schema.
 
         Args:

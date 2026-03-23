@@ -1,11 +1,10 @@
 """Keyword-based retriever for better demo results."""
 
 import re
-from typing import List
+
+from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
-from langchain_core.callbacks import CallbackManagerForRetrieverRun
-
 
 # Common question patterns to ignore
 IGNORE_PATTERNS = [
@@ -49,16 +48,16 @@ SYNONYMS = {
 class SimpleRetriever(BaseRetriever):
     """Keyword-based retriever for demo - more reliable than vector search with fake embeddings."""
 
-    documents: List[Document]
+    documents: list[Document]
     k: int = 3
 
-    def __init__(self, documents: List[Document] = None, k: int = 3, **kwargs):
+    def __init__(self, documents: list[Document] = None, k: int = 3, **kwargs):
         # Note: vector_store parameter kept for backward compatibility but not used
         # SimpleRetriever uses keyword matching, not vector similarity
         kwargs.pop("vector_store", None)
         super().__init__(documents=documents or [], k=k, **kwargs)
 
-    def _extract_keywords(self, query: str) -> List[str]:
+    def _extract_keywords(self, query: str) -> list[str]:
         """Extract meaningful keywords from query."""
         # Lowercase
         query = query.lower()
@@ -86,7 +85,7 @@ class SimpleRetriever(BaseRetriever):
         query: str,
         *,
         run_manager: CallbackManagerForRetrieverRun = None,
-    ) -> List[Document]:
+    ) -> list[Document]:
         """Retrieve relevant documents using keyword matching."""
         if not self.documents:
             return []

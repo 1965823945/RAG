@@ -1,8 +1,9 @@
 """Tool registry with metadata and export support."""
 
-from typing import Dict, List, Optional, Any
-from rag_minimal.tools.base import Tool
+from typing import Any
+
 from rag_minimal.schemas import ToolMetadata
+from rag_minimal.tools.base import Tool
 
 
 class ToolRegistry:
@@ -15,7 +16,7 @@ class ToolRegistry:
     """
 
     def __init__(self):
-        self._tools: Dict[str, Tool] = {}
+        self._tools: dict[str, Tool] = {}
 
     def register(self, tool: Tool) -> None:
         """Register a tool.
@@ -60,7 +61,7 @@ class ToolRegistry:
             raise KeyError(f"Tool '{name}' not found. Available: {self.list_tools()}")
         return self._tools[name]
 
-    def get_optional(self, name: str) -> Optional[Tool]:
+    def get_optional(self, name: str) -> Tool | None:
         """Get a tool by name, returning None if not found."""
         return self._tools.get(name)
 
@@ -68,11 +69,11 @@ class ToolRegistry:
         """Check if a tool is registered."""
         return name in self._tools
 
-    def list_tools(self) -> List[str]:
+    def list_tools(self) -> list[str]:
         """List all registered tool names."""
         return list(self._tools.keys())
 
-    def list_metadata(self) -> List[ToolMetadata]:
+    def list_metadata(self) -> list[ToolMetadata]:
         """Get metadata for all registered tools.
 
         Returns:
@@ -91,7 +92,7 @@ class ToolRegistry:
         """
         return self.get(name).get_metadata()
 
-    def find_by_tag(self, tag: str) -> List[Tool]:
+    def find_by_tag(self, tag: str) -> list[Tool]:
         """Find tools by tag.
 
         Args:
@@ -106,7 +107,7 @@ class ToolRegistry:
             if hasattr(tool, "tags") and tag in tool.tags
         ]
 
-    def export_openai_functions(self) -> List[Dict[str, Any]]:
+    def export_openai_functions(self) -> list[dict[str, Any]]:
         """Export all tools as OpenAI function definitions.
 
         Returns:
@@ -114,7 +115,7 @@ class ToolRegistry:
         """
         return [tool.to_openai_function() for tool in self._tools.values()]
 
-    def export_mcp_tools(self) -> List[Dict[str, Any]]:
+    def export_mcp_tools(self) -> list[dict[str, Any]]:
         """Export all tools as MCP tool definitions.
 
         Returns:

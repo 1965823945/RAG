@@ -18,6 +18,6 @@ Usage:
 For Claude Desktop / Cursor configuration, see mcp_config_example.json
 """
 
-from rag_minimal.mcp.server import MCPServer, JsonRpcRequest, JsonRpcResponse
+from rag_minimal.mcp.server import JsonRpcRequest, JsonRpcResponse, MCPServer
 
 __all__ = ["MCPServer", "JsonRpcRequest", "JsonRpcResponse"]

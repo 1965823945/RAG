@@ -1,7 +1,7 @@
 """Embeddings module for RAG demo."""
 
 import hashlib
-from typing import List
+
 from langchain_core.embeddings import Embeddings
 
 
@@ -19,7 +19,7 @@ class FakeEmbeddings(Embeddings):
     def embedding_dimension(self) -> int:
         return self._dimension
 
-    def _get_deterministic_vector(self, text: str) -> List[float]:
+    def _get_deterministic_vector(self, text: str) -> list[float]:
         """Generate a deterministic vector from text content."""
         # Normalize text
         text = text.lower().strip()
@@ -41,10 +41,10 @@ class FakeEmbeddings(Embeddings):
 
         return vector[: self._dimension]
 
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """Return fake embeddings for documents."""
         return [self._get_deterministic_vector(text) for text in texts]
 
-    def embed_query(self, text: str) -> List[float]:
+    def embed_query(self, text: str) -> list[float]:
         """Return fake embedding for query."""
         return self._get_deterministic_vector(text)

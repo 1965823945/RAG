@@ -7,13 +7,13 @@ This module provides:
 """
 
 from rag_minimal.memory.conversation import ConversationManager
+from rag_minimal.memory.conversational_agent import ConversationalAgent
 from rag_minimal.memory.memory_system import (
+    LongTermMemory,
     MemorySystem,
     ShortTermMemory,
-    LongTermMemory,
     WorkingMemory,
 )
-from rag_minimal.memory.conversational_agent import ConversationalAgent
 
 __all__ = [
     "ConversationManager",

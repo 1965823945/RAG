@@ -1,9 +1,9 @@
 """RAG Chain module."""
 
-from typing import Optional
-from langchain_core.runnables import Runnable
-from langchain_core.prompts import PromptTemplate
+
 from langchain_core.language_models import BaseLLM
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import Runnable
 
 from rag_minimal.constants import DEFAULT_RAG_PROMPT
 from rag_minimal.llm import SimpleLLM
@@ -11,8 +11,8 @@ from rag_minimal.retriever import SimpleRetriever
 
 
 def create_rag_chain(
-    llm: Optional[BaseLLM] = None,
-    retriever: Optional[SimpleRetriever] = None,
+    llm: BaseLLM | None = None,
+    retriever: SimpleRetriever | None = None,
     prompt_template: str = DEFAULT_RAG_PROMPT,
 ) -> Runnable:
     """Create a RAG (Retrieval-Augmented Generation) chain.

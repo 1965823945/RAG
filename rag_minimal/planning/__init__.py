@@ -6,10 +6,10 @@ This module provides:
 3. Self-Reflection - Quality assessment and improvement
 """
 
-from rag_minimal.planning.task_decomposer import TaskDecomposer
 from rag_minimal.planning.chain_of_thought import ChainOfThought
-from rag_minimal.planning.self_reflection import SelfReflection
 from rag_minimal.planning.planning_agent import PlanningAgent
+from rag_minimal.planning.self_reflection import SelfReflection
+from rag_minimal.planning.task_decomposer import TaskDecomposer
 
 __all__ = [
     "TaskDecomposer",

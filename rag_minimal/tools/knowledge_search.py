@@ -1,22 +1,23 @@
 """Knowledge search tool wrapping current RAG retrieval."""
 
-import os
 import hashlib
 import logging
-from typing import Any, Dict, List, Optional
+import os
+from typing import Any
+
 from pydantic import ValidationError
 
+from rag_minimal.chunker import chunk_documents
+from rag_minimal.loader import load_documents
+from rag_minimal.retriever import SimpleRetriever
 from rag_minimal.schemas import (
+    ErrorCode,
     SearchInput,
     SearchOutput,
     SearchResultItem,
-    ErrorCode,
 )
 from rag_minimal.tools.base import Tool
 from rag_minimal.tools.logger import logged_invoke
-from rag_minimal.loader import load_documents
-from rag_minimal.chunker import chunk_documents
-from rag_minimal.retriever import SimpleRetriever
 
 logger = logging.getLogger("rag_minimal.tools")
 
@@ -62,8 +63,8 @@ class KnowledgeSearchTool(Tool):
         self.auto_refresh = auto_refresh
 
         # Cache
-        self._chunks: Optional[List[Any]] = None
-        self._chunk_metadata: Dict[int, Dict[str, Any]] = {}
+        self._chunks: list[Any] | None = None
+        self._chunk_metadata: dict[int, dict[str, Any]] = {}
         self._last_mtime: float = 0.0
 
     def _get_dir_mtime(self) -> float:
@@ -119,14 +120,14 @@ class KnowledgeSearchTool(Tool):
         logger.info(f"Loaded {len(chunks)} chunks from {len(docs)} documents")
         return len(chunks)
 
-    def _ensure_loaded(self) -> List[Any]:
+    def _ensure_loaded(self) -> list[Any]:
         """Ensure documents are loaded, refresh if needed."""
         if self._needs_refresh():
             self.refresh()
         return self._chunks or []
 
     @logged_invoke
-    def invoke(self, payload: Dict[str, Any]) -> SearchOutput:
+    def invoke(self, payload: dict[str, Any]) -> SearchOutput:
         """Execute knowledge search.
 
         Args:

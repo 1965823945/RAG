@@ -1,18 +1,18 @@
 """Tests for Memory module - Conversation and Memory System."""
 
 from rag_minimal.memory import (
+    ConversationalAgent,
     ConversationManager,
+    LongTermMemory,
     MemorySystem,
     ShortTermMemory,
-    LongTermMemory,
     WorkingMemory,
-    ConversationalAgent,
 )
 from rag_minimal.schemas import (
-    MessageRole,
-    Message,
     Conversation,
     MemoryType,
+    Message,
+    MessageRole,
     SearchOutput,
     SearchResultItem,
 )

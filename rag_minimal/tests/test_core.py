@@ -1,8 +1,8 @@
 """Tests for rag_minimal package."""
-from rag_minimal.llm import SimpleLLM
-from rag_minimal.embeddings import FakeEmbeddings
-from rag_minimal.loader import load_pdfs
 from rag_minimal.chunker import chunk_documents
+from rag_minimal.embeddings import FakeEmbeddings
+from rag_minimal.llm import SimpleLLM
+from rag_minimal.loader import load_pdfs
 
 
 class TestSimpleLLM:
@@ -52,7 +52,7 @@ class TestChunker:
 
     def test_chunk_with_docs(self):
         from langchain_core.documents import Document
-        
+
         docs = [
             Document(page_content="This is a long text " * 100, metadata={"source": "test"})
         ]

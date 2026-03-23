@@ -1,17 +1,15 @@
 """Base schemas for standardized tool interfaces."""
 
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
-
 
 # ─────────────────────────────────────────────────────────────
 # Standard Error Codes
 # ─────────────────────────────────────────────────────────────
 
 
-class ErrorCode(str, Enum):
+class ErrorCode(StrEnum):
     """Standardized error codes for tool execution."""
 
     # Success
@@ -62,16 +60,16 @@ class ToolOutput(BaseModel):
     message: str = Field(default="ok", description="Human-readable message")
 
     # Tracing info
-    trace_id: Optional[str] = Field(
+    trace_id: str | None = Field(
         default=None, description="Unique trace ID for this call"
     )
-    duration_ms: Optional[float] = Field(
+    duration_ms: float | None = Field(
         default=None, description="Execution time in milliseconds"
     )
-    timestamp: Optional[str] = Field(default=None, description="ISO format timestamp")
+    timestamp: str | None = Field(default=None, description="ISO format timestamp")
 
     def with_error(
-        self, error_code: ErrorCode, message: str, trace_id: Optional[str] = None
+        self, error_code: ErrorCode, message: str, trace_id: str | None = None
     ) -> "ToolOutput":
         """Create a copy with error info."""
         return self.model_copy(

@@ -1,19 +1,18 @@
 """Planning Agent schemas for task decomposition, chain of thought, and self-reflection."""
 
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 from .base import ToolOutput
-
 
 # ─────────────────────────────────────────────────────────────
 # Task Status & Priority
 # ─────────────────────────────────────────────────────────────
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(StrEnum):
     """Task execution status."""
 
     PENDING = "pending"  # 待执行
@@ -24,7 +23,7 @@ class TaskStatus(str, Enum):
     CANCELLED = "cancelled"  # 已取消
 
 
-class TaskPriority(str, Enum):
+class TaskPriority(StrEnum):
     """Task priority levels."""
 
     CRITICAL = "critical"  # 关键
@@ -47,11 +46,11 @@ class SubTask(BaseModel):
     priority: TaskPriority = Field(
         default=TaskPriority.MEDIUM, description="Task priority"
     )
-    dependencies: List[str] = Field(
+    dependencies: list[str] = Field(
         default_factory=list, description="IDs of subtasks this depends on"
     )
-    result: Optional[str] = Field(default=None, description="Execution result")
-    error: Optional[str] = Field(default=None, description="Error message if failed")
+    result: str | None = Field(default=None, description="Execution result")
+    error: str | None = Field(default=None, description="Error message if failed")
     retry_count: int = Field(default=0, description="Number of retries attempted")
     max_retries: int = Field(default=2, description="Maximum retry attempts")
 
@@ -60,14 +59,14 @@ class TaskDecomposition(BaseModel):
     """Result of task decomposition."""
 
     original_task: str = Field(..., description="The original user task")
-    subtasks: List[SubTask] = Field(
+    subtasks: list[SubTask] = Field(
         default_factory=list, description="Decomposed subtasks"
     )
     total_steps: int = Field(default=0, description="Total number of steps")
     complexity: str = Field(
         default="medium", description="Estimated complexity: simple/medium/complex"
     )
-    estimated_time: Optional[str] = Field(
+    estimated_time: str | None = Field(
         default=None, description="Estimated completion time"
     )
 
@@ -82,12 +81,12 @@ class ThoughtStep(BaseModel):
 
     step_number: int = Field(..., description="Step number in the chain")
     thought: str = Field(..., description="The reasoning thought")
-    action: Optional[str] = Field(default=None, description="Action to take")
-    action_input: Optional[Dict[str, Any]] = Field(
+    action: str | None = Field(default=None, description="Action to take")
+    action_input: dict[str, Any] | None = Field(
         default=None, description="Input for the action"
     )
-    observation: Optional[str] = Field(default=None, description="Result of the action")
-    timestamp: Optional[str] = Field(
+    observation: str | None = Field(default=None, description="Result of the action")
+    timestamp: str | None = Field(
         default=None, description="When this step occurred"
     )
 
@@ -96,10 +95,10 @@ class ChainOfThoughtResult(BaseModel):
     """Complete chain of thought reasoning."""
 
     question: str = Field(..., description="The question being reasoned about")
-    thoughts: List[ThoughtStep] = Field(
+    thoughts: list[ThoughtStep] = Field(
         default_factory=list, description="Chain of thought steps"
     )
-    final_answer: Optional[str] = Field(default=None, description="Final conclusion")
+    final_answer: str | None = Field(default=None, description="Final conclusion")
     confidence: float = Field(
         default=0.0, ge=0.0, le=1.0, description="Confidence in the answer"
     )
@@ -111,7 +110,7 @@ class ChainOfThoughtResult(BaseModel):
 # ─────────────────────────────────────────────────────────────
 
 
-class ReflectionType(str, Enum):
+class ReflectionType(StrEnum):
     """Types of self-reflection."""
 
     QUALITY_CHECK = "quality_check"  # 质量检查
@@ -130,8 +129,8 @@ class ReflectionItem(BaseModel):
     score: float = Field(
         default=0.0, ge=0.0, le=1.0, description="Score for this aspect"
     )
-    issues: List[str] = Field(default_factory=list, description="Issues identified")
-    suggestions: List[str] = Field(
+    issues: list[str] = Field(default_factory=list, description="Issues identified")
+    suggestions: list[str] = Field(
         default_factory=list, description="Improvement suggestions"
     )
 
@@ -140,17 +139,17 @@ class SelfReflectionResult(BaseModel):
     """Result of self-reflection process."""
 
     context: str = Field(..., description="What is being reflected upon")
-    reflections: List[ReflectionItem] = Field(
+    reflections: list[ReflectionItem] = Field(
         default_factory=list, description="List of reflections"
     )
     overall_score: float = Field(
         default=0.0, ge=0.0, le=1.0, description="Overall quality score"
     )
     should_retry: bool = Field(default=False, description="Whether to retry the task")
-    retry_reason: Optional[str] = Field(
+    retry_reason: str | None = Field(
         default=None, description="Reason for retry if applicable"
     )
-    improvements: List[str] = Field(
+    improvements: list[str] = Field(
         default_factory=list, description="Suggested improvements"
     )
 
@@ -167,17 +166,17 @@ class PlanningAgentState(BaseModel):
     original_query: str = Field(..., description="Original user query")
 
     # Task decomposition
-    decomposition: Optional[TaskDecomposition] = Field(
+    decomposition: TaskDecomposition | None = Field(
         default=None, description="Task decomposition result"
     )
 
     # Chain of thought
-    reasoning: Optional[ChainOfThoughtResult] = Field(
+    reasoning: ChainOfThoughtResult | None = Field(
         default=None, description="Chain of thought reasoning"
     )
 
     # Self reflection
-    reflection: Optional[SelfReflectionResult] = Field(
+    reflection: SelfReflectionResult | None = Field(
         default=None, description="Self reflection result"
     )
 
@@ -188,14 +187,14 @@ class PlanningAgentState(BaseModel):
     max_iterations: int = Field(default=3, description="Maximum iterations allowed")
 
     # Results
-    final_answer: Optional[str] = Field(default=None, description="Final answer")
-    execution_history: List[Dict[str, Any]] = Field(
+    final_answer: str | None = Field(default=None, description="Final answer")
+    execution_history: list[dict[str, Any]] = Field(
         default_factory=list, description="History of all executions"
     )
 
     # Timing
-    start_time: Optional[str] = Field(default=None, description="Execution start time")
-    end_time: Optional[str] = Field(default=None, description="Execution end time")
+    start_time: str | None = Field(default=None, description="Execution start time")
+    end_time: str | None = Field(default=None, description="Execution end time")
 
 
 class PlanningAgentOutput(ToolOutput):
@@ -216,6 +215,6 @@ class PlanningAgentOutput(ToolOutput):
     quality_score: float = Field(default=0.0, description="Quality score")
 
     # Detailed state (optional)
-    state: Optional[PlanningAgentState] = Field(
+    state: PlanningAgentState | None = Field(
         default=None, description="Full agent state"
     )

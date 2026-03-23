@@ -4,10 +4,10 @@ import os
 import shutil
 
 from rag_minimal.agent_runtime import AgentRuntime
-from rag_minimal.llm import SimpleLLM
-from rag_minimal.embeddings import FakeEmbeddings
-from rag_minimal.loader import load_documents
 from rag_minimal.chunker import chunk_documents
+from rag_minimal.embeddings import FakeEmbeddings
+from rag_minimal.llm import SimpleLLM
+from rag_minimal.loader import load_documents
 from rag_minimal.vectorstore import create_vector_store
 
 

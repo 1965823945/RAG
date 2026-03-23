@@ -5,18 +5,16 @@ Implements self-assessment and improvement mechanisms for the agent.
 
 import json
 import re
-from typing import Optional, List
 
 from langchain_core.language_models import BaseLLM
 
 from rag_minimal.schemas import (
-    SelfReflectionResult,
+    ChainOfThoughtResult,
     ReflectionItem,
     ReflectionType,
-    ChainOfThoughtResult,
+    SelfReflectionResult,
     TaskDecomposition,
 )
-
 
 # Self-reflection prompt template
 REFLECTION_PROMPT = """你是一个严格的质量评估专家。请对以下内容进行全面的自我反思和评估。
@@ -87,7 +85,7 @@ class SelfReflection:
 
     def __init__(
         self,
-        llm: Optional[BaseLLM] = None,
+        llm: BaseLLM | None = None,
         quality_threshold: float = 0.6,
         max_retries: int = 2,
     ):
@@ -106,9 +104,9 @@ class SelfReflection:
         self,
         question: str,
         answer: str,
-        reasoning: Optional[ChainOfThoughtResult] = None,
-        task_decomposition: Optional[TaskDecomposition] = None,
-        context: Optional[str] = None,
+        reasoning: ChainOfThoughtResult | None = None,
+        task_decomposition: TaskDecomposition | None = None,
+        context: str | None = None,
     ) -> SelfReflectionResult:
         """Perform self-reflection on the generated answer.
 
@@ -131,7 +129,7 @@ class SelfReflection:
         self,
         question: str,
         answer: str,
-        reasoning: Optional[ChainOfThoughtResult],
+        reasoning: ChainOfThoughtResult | None,
     ) -> SelfReflectionResult:
         """Use LLM for self-reflection."""
         reasoning_text = ""
@@ -179,16 +177,16 @@ class SelfReflection:
         self,
         question: str,
         answer: str,
-        reasoning: Optional[ChainOfThoughtResult],
-        context: Optional[str],
+        reasoning: ChainOfThoughtResult | None,
+        context: str | None,
     ) -> SelfReflectionResult:
         """Rule-based self-reflection without LLM.
 
         Performs structured quality assessment based on heuristics.
         """
-        reflections: List[ReflectionItem] = []
-        issues_found: List[str] = []
-        improvements: List[str] = []
+        reflections: list[ReflectionItem] = []
+        issues_found: list[str] = []
+        improvements: list[str] = []
 
         # 1. Quality Check
         quality_reflection = self._check_quality(question, answer)
@@ -283,7 +281,7 @@ class SelfReflection:
         self,
         question: str,
         answer: str,
-        context: Optional[str],
+        context: str | None,
     ) -> ReflectionItem:
         """Check the completeness of the answer."""
         issues = []
@@ -331,7 +329,7 @@ class SelfReflection:
     def _check_consistency(
         self,
         answer: str,
-        reasoning: Optional[ChainOfThoughtResult],
+        reasoning: ChainOfThoughtResult | None,
     ) -> ReflectionItem:
         """Check the consistency of the answer."""
         issues = []
@@ -497,7 +495,7 @@ class SelfReflection:
         }
         return type_map.get(type_str.lower(), ReflectionType.QUALITY_CHECK)
 
-    def _extract_keywords(self, text: str) -> List[str]:
+    def _extract_keywords(self, text: str) -> list[str]:
         """Extract keywords from text."""
         # Simple keyword extraction - remove common words and short words
         stop_words = {

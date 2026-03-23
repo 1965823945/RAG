@@ -1,14 +1,14 @@
 """Tool call logging and tracing."""
 
-import uuid
-import time
 import logging
+import time
+import uuid
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Callable
 from functools import wraps
+from typing import Any
 
-from rag_minimal.schemas import ToolCallLog, ErrorCode
-
+from rag_minimal.schemas import ErrorCode, ToolCallLog
 
 # Configure logger
 logger = logging.getLogger("rag_minimal.tools")
@@ -23,7 +23,7 @@ class ToolLogger:
         Args:
             max_history: Maximum number of log entries to keep in memory
         """
-        self._history: List[ToolCallLog] = []
+        self._history: list[ToolCallLog] = []
         self._max_history = max_history
 
     @staticmethod
@@ -41,11 +41,11 @@ class ToolLogger:
         tool_name: str,
         trace_id: str,
         duration_ms: float,
-        input_params: Dict[str, Any],
+        input_params: dict[str, Any],
         success: bool,
         output_summary: str = "",
-        error_code: Optional[ErrorCode] = None,
-        error_message: Optional[str] = None,
+        error_code: ErrorCode | None = None,
+        error_message: str | None = None,
     ) -> ToolCallLog:
         """Log a tool invocation.
 
@@ -92,7 +92,7 @@ class ToolLogger:
 
         return entry
 
-    def _sanitize_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def _sanitize_params(self, params: dict[str, Any]) -> dict[str, Any]:
         """Remove or mask sensitive parameters."""
         sensitive_keys = {"password", "api_key", "token", "secret"}
         result = {}
@@ -105,7 +105,7 @@ class ToolLogger:
                 result[key] = value
         return result
 
-    def get_history(self, limit: int = 10) -> List[ToolCallLog]:
+    def get_history(self, limit: int = 10) -> list[ToolCallLog]:
         """Get recent log entries.
 
         Args:
@@ -116,14 +116,14 @@ class ToolLogger:
         """
         return self._history[-limit:]
 
-    def get_by_trace_id(self, trace_id: str) -> Optional[ToolCallLog]:
+    def get_by_trace_id(self, trace_id: str) -> ToolCallLog | None:
         """Get a log entry by trace ID."""
         for entry in reversed(self._history):
             if entry.trace_id == trace_id:
                 return entry
         return None
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get statistics about tool calls.
 
         Returns:
@@ -142,7 +142,7 @@ class ToolLogger:
         avg_duration = sum(e.duration_ms for e in self._history) / total
 
         # Group by tool
-        by_tool: Dict[str, Dict[str, Any]] = {}
+        by_tool: dict[str, dict[str, Any]] = {}
         for entry in self._history:
             if entry.tool_name not in by_tool:
                 by_tool[entry.tool_name] = {"calls": 0, "successes": 0, "total_ms": 0.0}
@@ -164,7 +164,7 @@ class ToolLogger:
 
 
 # Global logger instance
-_global_logger: Optional[ToolLogger] = None
+_global_logger: ToolLogger | None = None
 
 
 def get_tool_logger() -> ToolLogger:
@@ -186,7 +186,7 @@ def logged_invoke(func: Callable) -> Callable:
     """
 
     @wraps(func)
-    def wrapper(self, payload: Dict[str, Any], *args, **kwargs):
+    def wrapper(self, payload: dict[str, Any], *args, **kwargs):
         tool_logger = get_tool_logger()
         trace_id = tool_logger.generate_trace_id()
 

@@ -5,8 +5,8 @@ This script simulates an MCP client to test the server implementation.
 """
 
 import json
-import sys
 import os
+import sys
 
 # Add project root to path
 project_root = os.path.dirname(
@@ -15,9 +15,9 @@ project_root = os.path.dirname(
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from rag_minimal.mcp.server import MCPServer, JsonRpcRequest  # noqa: E402
-from rag_minimal.tools.registry import ToolRegistry  # noqa: E402
+from rag_minimal.mcp.server import JsonRpcRequest, MCPServer  # noqa: E402
 from rag_minimal.tools.knowledge_search import KnowledgeSearchTool  # noqa: E402
+from rag_minimal.tools.registry import ToolRegistry  # noqa: E402
 
 
 def test_mcp_server():

@@ -1,17 +1,16 @@
 """Tests for unified configuration management."""
 
-import os
 from rag_minimal.config import (
-    RAGSettings,
     DocumentConfig,
     LLMConfig,
+    RAGSettings,
     RetrievalConfig,
-    get_settings,
-    set_settings,
-    reset_settings,
     configure,
     get_default_prompt,
     get_default_top_k,
+    get_settings,
+    reset_settings,
+    set_settings,
 )
 
 

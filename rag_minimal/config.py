@@ -7,11 +7,10 @@ This module provides centralized configuration with:
 - Configuration validation
 """
 
-import os
-from typing import Any, Dict, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings
-
 
 # ─────────────────────────────────────────────────────────────
 # RAG Configuration
@@ -62,12 +61,12 @@ class LLMConfig(BaseModel):
         default="simple", description="LLM provider: simple, openai, anthropic, ollama"
     )
     model_name: str = Field(default="gpt-3.5-turbo", description="Model name")
-    api_key: Optional[str] = Field(default=None, description="API key")
-    base_url: Optional[str] = Field(default=None, description="Custom API base URL")
+    api_key: str | None = Field(default=None, description="API key")
+    base_url: str | None = Field(default=None, description="Custom API base URL")
     temperature: float = Field(
         default=0.7, ge=0.0, le=2.0, description="Sampling temperature"
     )
-    max_tokens: Optional[int] = Field(
+    max_tokens: int | None = Field(
         default=None, description="Maximum tokens to generate"
     )
 
@@ -163,7 +162,7 @@ class RAGSettings(BaseSettings):
         return cls()
 
     @classmethod
-    def from_dict(cls, config: Dict[str, Any]) -> "RAGSettings":
+    def from_dict(cls, config: dict[str, Any]) -> "RAGSettings":
         """Create settings from a dictionary."""
         return cls(**config)
 
@@ -173,7 +172,7 @@ class RAGSettings(BaseSettings):
 # ─────────────────────────────────────────────────────────────
 
 
-_settings: Optional[RAGSettings] = None
+_settings: RAGSettings | None = None
 
 
 def get_settings() -> RAGSettings:
@@ -206,12 +205,12 @@ def reset_settings() -> None:
 
 def configure(
     *,
-    docs_dir: Optional[str] = None,
-    llm_provider: Optional[str] = None,
-    llm_model: Optional[str] = None,
-    llm_api_key: Optional[str] = None,
-    top_k: Optional[int] = None,
-    debug: Optional[bool] = None,
+    docs_dir: str | None = None,
+    llm_provider: str | None = None,
+    llm_model: str | None = None,
+    llm_api_key: str | None = None,
+    top_k: int | None = None,
+    debug: bool | None = None,
     **kwargs,
 ) -> RAGSettings:
     """Configure RAG settings with common options.

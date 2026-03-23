@@ -1,7 +1,7 @@
 """LLM configuration and factory."""
 
 import logging
-from typing import Optional, Dict, Any
+from typing import Any
 
 from langchain_core.language_models import BaseLLM
 
@@ -11,8 +11,8 @@ logger = logging.getLogger("rag_minimal")
 def create_llm(
     provider: str = "simple",
     model_name: str = "gpt-3.5-turbo",
-    api_key: Optional[str] = None,
-    base_url: Optional[str] = None,
+    api_key: str | None = None,
+    base_url: str | None = None,
     temperature: float = 0.7,
     **kwargs,
 ) -> BaseLLM:
@@ -84,7 +84,7 @@ def create_llm(
 
 
 # Provider options for UI
-LLM_PROVIDERS: Dict[str, Dict[str, Any]] = {
+LLM_PROVIDERS: dict[str, dict[str, Any]] = {
     "simple": {
         "name": "演示模式 (SimpleLLM)",
         "description": "无需 API 密钥，适合演示",
@@ -116,6 +116,6 @@ LLM_PROVIDERS: Dict[str, Dict[str, Any]] = {
 }
 
 
-def get_provider_info(provider: str) -> Dict[str, Any]:
+def get_provider_info(provider: str) -> dict[str, Any]:
     """Get information about a provider."""
     return LLM_PROVIDERS.get(provider, LLM_PROVIDERS["simple"])

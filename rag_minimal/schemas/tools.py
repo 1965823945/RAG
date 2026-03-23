@@ -1,11 +1,10 @@
 """Tool-related schemas for search, RAG, metadata, and multi-tool calls."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 from .base import ErrorCode, ToolInput, ToolOutput
-
 
 # ─────────────────────────────────────────────────────────────
 # Search Tool Schemas
@@ -29,11 +28,11 @@ class SearchResultItem(BaseModel):
     score: float = Field(default=0.0, ge=0.0, description="Relevance score")
 
     # Tracing fields
-    doc_id: Optional[str] = Field(default=None, description="Document ID")
-    chunk_id: Optional[str] = Field(
+    doc_id: str | None = Field(default=None, description="Document ID")
+    chunk_id: str | None = Field(
         default=None, description="Chunk ID within document"
     )
-    chunk_index: Optional[int] = Field(
+    chunk_index: int | None = Field(
         default=None, description="Chunk index in source"
     )
 
@@ -42,10 +41,10 @@ class SearchOutput(ToolOutput):
     """Output for knowledge search tool."""
 
     query: str = Field(default="", description="Original query")
-    results: List[SearchResultItem] = Field(
+    results: list[SearchResultItem] = Field(
         default_factory=list, description="Search results"
     )
-    total_chunks: Optional[int] = Field(
+    total_chunks: int | None = Field(
         default=None, description="Total chunks searched"
     )
 
@@ -69,15 +68,15 @@ class RAGOutput(ToolOutput):
 
     question: str = Field(default="", description="Original question")
     answer: str = Field(default="", description="Generated answer")
-    sources: List[SearchResultItem] = Field(
+    sources: list[SearchResultItem] = Field(
         default_factory=list, description="Source documents"
     )
 
     # Additional metadata
-    context_length: Optional[int] = Field(
+    context_length: int | None = Field(
         default=None, description="Total context chars used"
     )
-    model_name: Optional[str] = Field(default=None, description="LLM model used")
+    model_name: str | None = Field(default=None, description="LLM model used")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -91,13 +90,13 @@ class ToolMetadata(BaseModel):
     name: str = Field(..., description="Tool name")
     description: str = Field(..., description="Tool description")
     version: str = Field(default="1.0.0", description="Tool version")
-    input_schema: Dict[str, Any] = Field(
+    input_schema: dict[str, Any] = Field(
         default_factory=dict, description="JSON Schema for input"
     )
-    output_schema: Dict[str, Any] = Field(
+    output_schema: dict[str, Any] = Field(
         default_factory=dict, description="JSON Schema for output"
     )
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list, description="Tool tags for categorization"
     )
 
@@ -116,15 +115,15 @@ class ToolCallLog(BaseModel):
     duration_ms: float = Field(..., description="Execution time in ms")
 
     # Request/Response
-    input_params: Dict[str, Any] = Field(
+    input_params: dict[str, Any] = Field(
         default_factory=dict, description="Input parameters"
     )
     output_summary: str = Field(default="", description="Brief summary of output")
 
     # Status
     success: bool = Field(default=True)
-    error_code: Optional[ErrorCode] = Field(default=None)
-    error_message: Optional[str] = Field(default=None)
+    error_code: ErrorCode | None = Field(default=None)
+    error_message: str | None = Field(default=None)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -136,10 +135,10 @@ class ToolCallRequest(BaseModel):
     """A single tool call request."""
 
     tool_name: str = Field(..., description="Name of the tool to invoke")
-    arguments: Dict[str, Any] = Field(
+    arguments: dict[str, Any] = Field(
         default_factory=dict, description="Arguments to pass to the tool"
     )
-    call_id: Optional[str] = Field(
+    call_id: str | None = Field(
         default=None,
         description="Unique ID for this call (auto-generated if not provided)",
     )
@@ -157,21 +156,21 @@ class ToolCallResult(BaseModel):
     message: str = Field(default="ok", description="Human-readable message")
 
     # Result data
-    result: Optional[Dict[str, Any]] = Field(
+    result: dict[str, Any] | None = Field(
         default=None, description="Tool output as dict"
     )
 
     # Timing
-    duration_ms: Optional[float] = Field(
+    duration_ms: float | None = Field(
         default=None, description="Execution time in milliseconds"
     )
-    timestamp: Optional[str] = Field(default=None, description="ISO format timestamp")
+    timestamp: str | None = Field(default=None, description="ISO format timestamp")
 
 
 class MultiToolInput(ToolInput):
     """Input for multi-tool invocation."""
 
-    calls: List[ToolCallRequest] = Field(
+    calls: list[ToolCallRequest] = Field(
         ..., min_length=1, description="List of tool calls to execute"
     )
     parallel: bool = Field(
@@ -186,7 +185,7 @@ class MultiToolInput(ToolInput):
 class MultiToolOutput(ToolOutput):
     """Output from multi-tool invocation."""
 
-    results: List[ToolCallResult] = Field(
+    results: list[ToolCallResult] = Field(
         default_factory=list, description="Results from each tool call"
     )
     total_calls: int = Field(default=0, description="Total number of calls made")
@@ -196,13 +195,13 @@ class MultiToolOutput(ToolOutput):
         default=0.0, description="Total execution time in milliseconds"
     )
 
-    def get_result(self, call_id: str) -> Optional[ToolCallResult]:
+    def get_result(self, call_id: str) -> ToolCallResult | None:
         """Get result by call ID."""
         for r in self.results:
             if r.call_id == call_id:
                 return r
         return None
 
-    def get_result_by_tool(self, tool_name: str) -> List[ToolCallResult]:
+    def get_result_by_tool(self, tool_name: str) -> list[ToolCallResult]:
         """Get all results for a specific tool."""
         return [r for r in self.results if r.tool_name == tool_name]

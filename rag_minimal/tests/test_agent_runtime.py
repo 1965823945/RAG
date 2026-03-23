@@ -1,19 +1,18 @@
 """Tests for AgentRuntime - Multi-tool invocation system."""
 
-import asyncio
 import time
-from typing import Any, Dict
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from rag_minimal.agent_runtime import AgentRuntime
-from rag_minimal.tools.base import Tool
-from rag_minimal.tools.examples import CalculatorTool, EchoTool, TextTransformTool
 from rag_minimal.schemas import (
+    ErrorCode,
     ToolCallRequest,
     ToolOutput,
-    ErrorCode,
 )
-
+from rag_minimal.tools.base import Tool
+from rag_minimal.tools.examples import CalculatorTool, EchoTool, TextTransformTool
 
 # ─────────────────────────────────────────────────────────────
 # Test Fixtures - Mock Tools
@@ -40,7 +39,7 @@ class SlowTool(Tool):
     input_schema = SlowToolInput
     output_schema = SlowToolOutput
 
-    def invoke(self, payload: Dict[str, Any]) -> SlowToolOutput:
+    def invoke(self, payload: dict[str, Any]) -> SlowToolOutput:
         validated = self.validate_input(payload)
         time.sleep(validated.delay)
         return SlowToolOutput(success=True, delayed=validated.delay)
@@ -66,7 +65,7 @@ class FailingTool(Tool):
     input_schema = FailingToolInput
     output_schema = FailingToolOutput
 
-    def invoke(self, payload: Dict[str, Any]) -> FailingToolOutput:
+    def invoke(self, payload: dict[str, Any]) -> FailingToolOutput:
         validated = self.validate_input(payload)
         if validated.should_fail:
             raise ValueError("This tool always fails!")
@@ -102,7 +101,7 @@ class TestAgentRuntimeBasic:
 
         try:
             runtime.register_tool(CalculatorTool())
-            assert False, "Should raise ValueError"
+            raise AssertionError("Should raise ValueError")
         except ValueError as e:
             assert "already registered" in str(e)
 

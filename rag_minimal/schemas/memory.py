@@ -1,20 +1,19 @@
 """Memory and conversation schemas for conversational agents."""
 
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 from .base import ToolInput, ToolOutput
 from .tools import SearchResultItem
 
-
 # ─────────────────────────────────────────────────────────────
 # Message & Conversation Schemas
 # ─────────────────────────────────────────────────────────────
 
 
-class MessageRole(str, Enum):
+class MessageRole(StrEnum):
     """Role of the message sender."""
 
     USER = "user"  # 用户消息
@@ -32,18 +31,18 @@ class Message(BaseModel):
     timestamp: str = Field(..., description="ISO format timestamp")
 
     # Optional metadata
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional metadata"
     )
 
     # For tool messages
-    tool_name: Optional[str] = Field(
+    tool_name: str | None = Field(
         default=None, description="Tool name if tool message"
     )
-    tool_call_id: Optional[str] = Field(default=None, description="Tool call ID")
+    tool_call_id: str | None = Field(default=None, description="Tool call ID")
 
     # For assistant messages
-    sources: List[SearchResultItem] = Field(
+    sources: list[SearchResultItem] = Field(
         default_factory=list, description="Sources used for this response"
     )
 
@@ -52,18 +51,18 @@ class Conversation(BaseModel):
     """A conversation session containing multiple messages."""
 
     id: str = Field(..., description="Unique conversation ID")
-    title: Optional[str] = Field(default=None, description="Conversation title")
-    messages: List[Message] = Field(default_factory=list, description="Message history")
+    title: str | None = Field(default=None, description="Conversation title")
+    messages: list[Message] = Field(default_factory=list, description="Message history")
 
     # Timestamps
     created_at: str = Field(..., description="Creation timestamp")
     updated_at: str = Field(..., description="Last update timestamp")
 
     # Metadata
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Conversation metadata"
     )
-    summary: Optional[str] = Field(default=None, description="Conversation summary")
+    summary: str | None = Field(default=None, description="Conversation summary")
 
     # Statistics
     message_count: int = Field(default=0, description="Total message count")
@@ -75,7 +74,7 @@ class Conversation(BaseModel):
 # ─────────────────────────────────────────────────────────────
 
 
-class MemoryType(str, Enum):
+class MemoryType(StrEnum):
     """Type of memory entry."""
 
     FACT = "fact"  # 事实信息
@@ -94,10 +93,10 @@ class MemoryEntry(BaseModel):
     content: str = Field(..., description="Memory content")
 
     # Source tracking
-    source_conversation_id: Optional[str] = Field(
+    source_conversation_id: str | None = Field(
         default=None, description="Source conversation ID"
     )
-    source_message_id: Optional[str] = Field(
+    source_message_id: str | None = Field(
         default=None, description="Source message ID"
     )
 
@@ -112,16 +111,16 @@ class MemoryEntry(BaseModel):
     access_count: int = Field(default=0, description="Number of times accessed")
 
     # For entity memories
-    entity_name: Optional[str] = Field(default=None, description="Entity name")
-    entity_type: Optional[str] = Field(default=None, description="Entity type")
+    entity_name: str | None = Field(default=None, description="Entity name")
+    entity_type: str | None = Field(default=None, description="Entity type")
 
     # Embedding for similarity search
-    embedding: Optional[List[float]] = Field(
+    embedding: list[float] | None = Field(
         default=None, description="Vector embedding"
     )
 
     # TTL for short-term memories
-    expires_at: Optional[str] = Field(default=None, description="Expiration timestamp")
+    expires_at: str | None = Field(default=None, description="Expiration timestamp")
 
 
 class MemorySearchResult(BaseModel):
@@ -142,27 +141,27 @@ class ConversationContext(BaseModel):
     """Context built from conversation history and memories."""
 
     # Recent messages
-    recent_messages: List[Message] = Field(
+    recent_messages: list[Message] = Field(
         default_factory=list, description="Recent conversation messages"
     )
 
     # Relevant memories
-    relevant_memories: List[MemoryEntry] = Field(
+    relevant_memories: list[MemoryEntry] = Field(
         default_factory=list, description="Relevant memory entries"
     )
 
     # Retrieved documents
-    retrieved_docs: List[SearchResultItem] = Field(
+    retrieved_docs: list[SearchResultItem] = Field(
         default_factory=list, description="Retrieved documents"
     )
 
     # Conversation summary
-    conversation_summary: Optional[str] = Field(
+    conversation_summary: str | None = Field(
         default=None, description="Summary of conversation so far"
     )
 
     # Extracted entities
-    entities: Dict[str, str] = Field(
+    entities: dict[str, str] = Field(
         default_factory=dict, description="Extracted entities"
     )
 
@@ -180,7 +179,7 @@ class ConversationalInput(ToolInput):
     """Input for conversational agent."""
 
     message: str = Field(..., min_length=1, description="User message")
-    conversation_id: Optional[str] = Field(
+    conversation_id: str | None = Field(
         default=None, description="Conversation ID to continue"
     )
     include_history: bool = Field(
@@ -207,14 +206,14 @@ class ConversationalOutput(ToolOutput):
     documents_used: int = Field(default=0, description="Number of documents retrieved")
 
     # Sources
-    sources: List[SearchResultItem] = Field(
+    sources: list[SearchResultItem] = Field(
         default_factory=list, description="Source documents"
     )
 
     # Extracted information
-    new_memories: List[str] = Field(
+    new_memories: list[str] = Field(
         default_factory=list, description="New memories extracted from this turn"
     )
-    entities_mentioned: Dict[str, str] = Field(
+    entities_mentioned: dict[str, str] = Field(
         default_factory=dict, description="Entities mentioned"
     )

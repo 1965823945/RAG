@@ -1,15 +1,15 @@
 """Conversation Manager - Manages conversation sessions and message history."""
 
-import uuid
 import json
-from typing import Optional, List, Dict, Any
+import uuid
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from rag_minimal.schemas import (
+    Conversation,
     Message,
     MessageRole,
-    Conversation,
     SearchResultItem,
 )
 
@@ -28,7 +28,7 @@ class ConversationManager:
     def __init__(
         self,
         max_history_messages: int = 20,
-        persist_dir: Optional[str] = None,
+        persist_dir: str | None = None,
     ):
         """Initialize the conversation manager.
 
@@ -40,7 +40,7 @@ class ConversationManager:
         self.persist_dir = Path(persist_dir) if persist_dir else None
 
         # In-memory storage
-        self._conversations: Dict[str, Conversation] = {}
+        self._conversations: dict[str, Conversation] = {}
 
         # Load persisted conversations
         if self.persist_dir:
@@ -49,8 +49,8 @@ class ConversationManager:
 
     def create_conversation(
         self,
-        title: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        title: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> Conversation:
         """Create a new conversation session.
 
@@ -80,7 +80,7 @@ class ConversationManager:
 
         return conversation
 
-    def get_conversation(self, conversation_id: str) -> Optional[Conversation]:
+    def get_conversation(self, conversation_id: str) -> Conversation | None:
         """Get a conversation by ID.
 
         Args:
@@ -93,7 +93,7 @@ class ConversationManager:
 
     def get_or_create_conversation(
         self,
-        conversation_id: Optional[str] = None,
+        conversation_id: str | None = None,
     ) -> Conversation:
         """Get an existing conversation or create a new one.
 
@@ -112,10 +112,10 @@ class ConversationManager:
         conversation_id: str,
         role: MessageRole,
         content: str,
-        sources: Optional[List[SearchResultItem]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        tool_name: Optional[str] = None,
-        tool_call_id: Optional[str] = None,
+        sources: list[SearchResultItem] | None = None,
+        metadata: dict[str, Any] | None = None,
+        tool_name: str | None = None,
+        tool_call_id: str | None = None,
     ) -> Message:
         """Add a message to a conversation.
 
@@ -172,7 +172,7 @@ class ConversationManager:
         self,
         conversation_id: str,
         content: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> Message:
         """Convenience method to add a user message."""
         return self.add_message(
@@ -186,8 +186,8 @@ class ConversationManager:
         self,
         conversation_id: str,
         content: str,
-        sources: Optional[List[SearchResultItem]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        sources: list[SearchResultItem] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> Message:
         """Convenience method to add an assistant message."""
         return self.add_message(
@@ -213,9 +213,9 @@ class ConversationManager:
     def get_history(
         self,
         conversation_id: str,
-        limit: Optional[int] = None,
+        limit: int | None = None,
         include_system: bool = False,
-    ) -> List[Message]:
+    ) -> list[Message]:
         """Get conversation history.
 
         Args:
@@ -243,7 +243,7 @@ class ConversationManager:
     def get_history_as_text(
         self,
         conversation_id: str,
-        limit: Optional[int] = None,
+        limit: int | None = None,
         format_style: str = "chat",
     ) -> str:
         """Get conversation history as formatted text.
@@ -279,7 +279,7 @@ class ConversationManager:
 
         return "\n".join(lines)
 
-    def get_last_user_message(self, conversation_id: str) -> Optional[Message]:
+    def get_last_user_message(self, conversation_id: str) -> Message | None:
         """Get the last user message in a conversation."""
         messages = self.get_history(conversation_id)
         for msg in reversed(messages):
@@ -287,7 +287,7 @@ class ConversationManager:
                 return msg
         return None
 
-    def get_last_assistant_message(self, conversation_id: str) -> Optional[Message]:
+    def get_last_assistant_message(self, conversation_id: str) -> Message | None:
         """Get the last assistant message in a conversation."""
         messages = self.get_history(conversation_id)
         for msg in reversed(messages):
@@ -340,7 +340,7 @@ class ConversationManager:
         self,
         limit: int = 50,
         sort_by: str = "updated_at",
-    ) -> List[Conversation]:
+    ) -> list[Conversation]:
         """List all conversations.
 
         Args:
@@ -403,7 +403,7 @@ class ConversationManager:
 
         for file_path in self.persist_dir.glob("*.json"):
             try:
-                with open(file_path, "r", encoding="utf-8") as f:
+                with open(file_path, encoding="utf-8") as f:
                     data = json.load(f)
                     conversation = Conversation(**data)
                     self._conversations[conversation.id] = conversation
@@ -414,7 +414,7 @@ class ConversationManager:
         self,
         conversation_id: str,
         max_length: int = 30,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Generate a title from the first user message.
 
         Args:

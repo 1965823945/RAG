@@ -1,29 +1,30 @@
 """Minimal agent runtime using standardized tools."""
 
 import asyncio
+import logging
 import time
 import uuid
-import logging
-from datetime import datetime
-from typing import Any, AsyncIterator, Dict, Iterator, List, Optional
+from collections.abc import AsyncIterator, Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
+from typing import Any
 
 from langchain_core.language_models import BaseLLM
 
 from rag_minimal.constants import DEFAULT_RAG_PROMPT
+from rag_minimal.llm import SimpleLLM
 from rag_minimal.schemas import (
     ErrorCode,
-    SearchOutput,
-    RAGOutput,
-    ToolCallRequest,
-    ToolCallResult,
     MultiToolInput,
     MultiToolOutput,
+    RAGOutput,
+    SearchOutput,
+    ToolCallRequest,
+    ToolCallResult,
 )
+from rag_minimal.tools.base import Tool
 from rag_minimal.tools.knowledge_search import KnowledgeSearchTool
 from rag_minimal.tools.registry import ToolRegistry
-from rag_minimal.tools.base import Tool
-from rag_minimal.llm import SimpleLLM
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class AgentRuntime:
     def __init__(
         self,
         docs_dir: str = "docs",
-        llm: Optional[BaseLLM] = None,
+        llm: BaseLLM | None = None,
         prompt_template: str = DEFAULT_RAG_PROMPT,
         max_workers: int = 4,
     ):
@@ -69,7 +70,7 @@ class AgentRuntime:
         """
         return self.registry.unregister(name)
 
-    def list_tools(self) -> List[str]:
+    def list_tools(self) -> list[str]:
         """List all registered tool names."""
         return self.registry.list_tools()
 
@@ -84,8 +85,8 @@ class AgentRuntime:
     def invoke_tool(
         self,
         tool_name: str,
-        arguments: Dict[str, Any],
-        call_id: Optional[str] = None,
+        arguments: dict[str, Any],
+        call_id: str | None = None,
     ) -> ToolCallResult:
         """Invoke a single tool by name.
 
@@ -157,7 +158,7 @@ class AgentRuntime:
 
     def invoke_tools(
         self,
-        calls: List[ToolCallRequest],
+        calls: list[ToolCallRequest],
         parallel: bool = True,
         stop_on_error: bool = False,
     ) -> MultiToolOutput:
@@ -204,10 +205,10 @@ class AgentRuntime:
         )
 
     def _invoke_tools_parallel(
-        self, calls: List[ToolCallRequest]
-    ) -> List[ToolCallResult]:
+        self, calls: list[ToolCallRequest]
+    ) -> list[ToolCallResult]:
         """Execute tool calls in parallel using ThreadPoolExecutor."""
-        results: List[ToolCallResult] = []
+        results: list[ToolCallResult] = []
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             # Submit all tasks
@@ -242,10 +243,10 @@ class AgentRuntime:
         return results
 
     def _invoke_tools_sequential(
-        self, calls: List[ToolCallRequest], stop_on_error: bool = False
-    ) -> List[ToolCallResult]:
+        self, calls: list[ToolCallRequest], stop_on_error: bool = False
+    ) -> list[ToolCallResult]:
         """Execute tool calls sequentially."""
-        results: List[ToolCallResult] = []
+        results: list[ToolCallResult] = []
 
         for call in calls:
             result = self.invoke_tool(
@@ -283,7 +284,7 @@ class AgentRuntime:
     def invoke_many(
         self,
         tool_name: str,
-        arguments_list: List[Dict[str, Any]],
+        arguments_list: list[dict[str, Any]],
         parallel: bool = True,
     ) -> MultiToolOutput:
         """Invoke the same tool multiple times with different arguments.
@@ -304,7 +305,7 @@ class AgentRuntime:
 
     def invoke_chain(
         self,
-        calls: List[ToolCallRequest],
+        calls: list[ToolCallRequest],
         result_key: str = "result",
     ) -> MultiToolOutput:
         """Invoke tools in a chain, passing results to next tool.
@@ -318,9 +319,9 @@ class AgentRuntime:
         Returns:
             MultiToolOutput with all results
         """
-        results: List[ToolCallResult] = []
+        results: list[ToolCallResult] = []
         start_time = time.time()
-        previous_result: Optional[Dict[str, Any]] = None
+        previous_result: dict[str, Any] | None = None
 
         for call in calls:
             # Merge previous result into arguments
@@ -363,8 +364,8 @@ class AgentRuntime:
     async def ainvoke_tool(
         self,
         tool_name: str,
-        arguments: Dict[str, Any],
-        call_id: Optional[str] = None,
+        arguments: dict[str, Any],
+        call_id: str | None = None,
     ) -> ToolCallResult:
         """Async version of invoke_tool.
 
@@ -384,7 +385,7 @@ class AgentRuntime:
 
     async def ainvoke_tools(
         self,
-        calls: List[ToolCallRequest],
+        calls: list[ToolCallRequest],
         parallel: bool = True,
         stop_on_error: bool = False,
     ) -> MultiToolOutput:
@@ -431,8 +432,8 @@ class AgentRuntime:
         )
 
     async def _ainvoke_tools_parallel(
-        self, calls: List[ToolCallRequest]
-    ) -> List[ToolCallResult]:
+        self, calls: list[ToolCallRequest]
+    ) -> list[ToolCallResult]:
         """Execute tool calls in parallel using asyncio."""
         tasks = [
             self.ainvoke_tool(
@@ -445,10 +446,10 @@ class AgentRuntime:
         return await asyncio.gather(*tasks)
 
     async def _ainvoke_tools_sequential(
-        self, calls: List[ToolCallRequest], stop_on_error: bool = False
-    ) -> List[ToolCallResult]:
+        self, calls: list[ToolCallRequest], stop_on_error: bool = False
+    ) -> list[ToolCallResult]:
         """Execute tool calls sequentially (async)."""
-        results: List[ToolCallResult] = []
+        results: list[ToolCallResult] = []
 
         for call in calls:
             result = await self.ainvoke_tool(
@@ -467,7 +468,7 @@ class AgentRuntime:
     async def ainvoke_many(
         self,
         tool_name: str,
-        arguments_list: List[Dict[str, Any]],
+        arguments_list: list[dict[str, Any]],
         parallel: bool = True,
     ) -> MultiToolOutput:
         """Async version of invoke_many.
@@ -488,7 +489,7 @@ class AgentRuntime:
 
     async def ainvoke_chain(
         self,
-        calls: List[ToolCallRequest],
+        calls: list[ToolCallRequest],
         result_key: str = "result",
     ) -> MultiToolOutput:
         """Async version of invoke_chain.
@@ -502,9 +503,9 @@ class AgentRuntime:
         Returns:
             MultiToolOutput with all results
         """
-        results: List[ToolCallResult] = []
+        results: list[ToolCallResult] = []
         start_time = time.time()
-        previous_result: Optional[Dict[str, Any]] = None
+        previous_result: dict[str, Any] | None = None
 
         for call in calls:
             # Merge previous result into arguments
@@ -606,7 +607,7 @@ class AgentRuntime:
             sources=search_result.results,
         )
 
-    def run(self, query: str, top_k: int = 3) -> Dict[str, Any]:
+    def run(self, query: str, top_k: int = 3) -> dict[str, Any]:
         """Run the agent on a query (backward compatible).
 
         Returns dict format for compatibility.
@@ -686,7 +687,7 @@ class AgentRuntime:
             sources=search_result.results,
         )
 
-    async def arun(self, query: str, top_k: int = 3) -> Dict[str, Any]:
+    async def arun(self, query: str, top_k: int = 3) -> dict[str, Any]:
         """Async version of run.
 
         Returns dict format for compatibility.
@@ -698,7 +699,7 @@ class AgentRuntime:
     # Streaming RAG Pipeline
     # ─────────────────────────────────────────────────────────────
 
-    def stream_ask(self, question: str, top_k: int = 3) -> Iterator[Dict[str, Any]]:
+    def stream_ask(self, question: str, top_k: int = 3) -> Iterator[dict[str, Any]]:
         """Stream RAG pipeline with incremental output.
 
         Yields events during execution:
@@ -776,7 +777,7 @@ class AgentRuntime:
 
     async def astream_ask(
         self, question: str, top_k: int = 3
-    ) -> AsyncIterator[Dict[str, Any]]:
+    ) -> AsyncIterator[dict[str, Any]]:
         """Async streaming RAG pipeline.
 
         Yields events during execution (same as stream_ask).
