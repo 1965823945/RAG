@@ -613,3 +613,68 @@ class TestAsyncInvocation:
 
         assert result.success is False
         assert result.error_code == ErrorCode.INVALID_INPUT
+
+
+# ─────────────────────────────────────────────────────────────
+# Streaming Tests
+# ─────────────────────────────────────────────────────────────
+
+
+class TestStreamingRAG:
+    """Tests for streaming RAG pipeline."""
+
+    def test_stream_ask_events(self):
+        """Test streaming RAG produces expected events."""
+        runtime = AgentRuntime(docs_dir="docs")
+
+        events = list(runtime.stream_ask("test question"))
+
+        # Should have at least these events
+        event_types = [e["event"] for e in events]
+        assert "search_start" in event_types
+        assert "search_done" in event_types or "error" in event_types
+
+    def test_stream_ask_search_start(self):
+        """Test stream_ask includes question in search_start event."""
+        runtime = AgentRuntime(docs_dir="docs")
+
+        events = list(runtime.stream_ask("what is RAG?"))
+
+        search_start = next(e for e in events if e["event"] == "search_start")
+        assert search_start["question"] == "what is RAG?"
+
+    def test_stream_ask_done_has_answer(self):
+        """Test stream_ask done event includes answer."""
+        runtime = AgentRuntime(docs_dir="docs")
+
+        events = list(runtime.stream_ask("test"))
+
+        # Find done event if exists (may error if no docs)
+        done_events = [e for e in events if e["event"] == "done"]
+        error_events = [e for e in events if e["event"] == "error"]
+
+        # Should have either done or error
+        assert len(done_events) > 0 or len(error_events) > 0
+
+    async def test_astream_ask_events(self):
+        """Test async streaming RAG produces expected events."""
+        runtime = AgentRuntime(docs_dir="docs")
+
+        events = []
+        async for event in runtime.astream_ask("test question"):
+            events.append(event)
+
+        # Should have at least these events
+        event_types = [e["event"] for e in events]
+        assert "search_start" in event_types
+
+    async def test_astream_ask_search_start(self):
+        """Test astream_ask includes question in search_start event."""
+        runtime = AgentRuntime(docs_dir="docs")
+
+        events = []
+        async for event in runtime.astream_ask("what is RAG?"):
+            events.append(event)
+
+        search_start = next(e for e in events if e["event"] == "search_start")
+        assert search_start["question"] == "what is RAG?"

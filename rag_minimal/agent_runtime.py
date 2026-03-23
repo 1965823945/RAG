@@ -5,7 +5,7 @@ import time
 import uuid
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, AsyncIterator, Dict, Iterator, List, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from langchain_core.language_models import BaseLLM
@@ -693,3 +693,174 @@ class AgentRuntime:
         """
         result = await self.aask(query, top_k=top_k)
         return result.model_dump()
+
+    # ─────────────────────────────────────────────────────────────
+    # Streaming RAG Pipeline
+    # ─────────────────────────────────────────────────────────────
+
+    def stream_ask(self, question: str, top_k: int = 3) -> Iterator[Dict[str, Any]]:
+        """Stream RAG pipeline with incremental output.
+
+        Yields events during execution:
+        - {"event": "search_start"}
+        - {"event": "search_done", "sources": [...]}
+        - {"event": "generate_start"}
+        - {"event": "token", "token": "..."}
+        - {"event": "done", "answer": "...", "sources": [...]}
+        - {"event": "error", "message": "..."}
+
+        Args:
+            question: User question
+            top_k: Number of documents to retrieve
+
+        Yields:
+            Event dictionaries
+        """
+        # Step 1: Search
+        yield {"event": "search_start", "question": question}
+
+        search_result = self.search(question, top_k=top_k)
+
+        if not search_result.success:
+            yield {
+                "event": "error",
+                "message": search_result.message,
+                "error_code": search_result.error_code.value,
+            }
+            return
+
+        sources = [s.model_dump() for s in search_result.results]
+        yield {"event": "search_done", "sources": sources}
+
+        # Step 2: Format context
+        context_parts = []
+        for item in search_result.results:
+            context_parts.append(item.content)
+        context = "\n\n".join(context_parts)
+
+        # Step 3: Generate with streaming
+        prompt = self.prompt_template.format(context=context, question=question)
+        yield {"event": "generate_start"}
+
+        try:
+            # Check if LLM supports streaming
+            if hasattr(self.llm, "stream"):
+                full_answer = ""
+                for chunk in self.llm.stream(prompt):
+                    if hasattr(chunk, "content"):
+                        token = chunk.content
+                    else:
+                        token = str(chunk)
+                    full_answer += token
+                    yield {"event": "token", "token": token}
+            else:
+                # Fall back to non-streaming
+                llm_result = self.llm.invoke(prompt)
+                if hasattr(llm_result, "content"):
+                    full_answer = llm_result.content
+                else:
+                    full_answer = str(llm_result)
+                yield {"event": "token", "token": full_answer}
+
+            yield {
+                "event": "done",
+                "answer": full_answer,
+                "sources": sources,
+            }
+
+        except Exception as e:
+            yield {
+                "event": "error",
+                "message": f"LLM error: {str(e)}",
+            }
+
+    async def astream_ask(
+        self, question: str, top_k: int = 3
+    ) -> AsyncIterator[Dict[str, Any]]:
+        """Async streaming RAG pipeline.
+
+        Yields events during execution (same as stream_ask).
+
+        Args:
+            question: User question
+            top_k: Number of documents to retrieve
+
+        Yields:
+            Event dictionaries
+        """
+        # Step 1: Async Search
+        yield {"event": "search_start", "question": question}
+
+        search_result = await self.asearch(question, top_k=top_k)
+
+        if not search_result.success:
+            yield {
+                "event": "error",
+                "message": search_result.message,
+                "error_code": search_result.error_code.value,
+            }
+            return
+
+        sources = [s.model_dump() for s in search_result.results]
+        yield {"event": "search_done", "sources": sources}
+
+        # Step 2: Format context
+        context_parts = []
+        for item in search_result.results:
+            context_parts.append(item.content)
+        context = "\n\n".join(context_parts)
+
+        # Step 3: Generate with async streaming
+        prompt = self.prompt_template.format(context=context, question=question)
+        yield {"event": "generate_start"}
+
+        try:
+            # Check if LLM supports async streaming
+            if hasattr(self.llm, "astream"):
+                full_answer = ""
+                async for chunk in self.llm.astream(prompt):
+                    if hasattr(chunk, "content"):
+                        token = chunk.content
+                    else:
+                        token = str(chunk)
+                    full_answer += token
+                    yield {"event": "token", "token": token}
+            elif hasattr(self.llm, "stream"):
+                # Fall back to sync streaming in executor
+                loop = asyncio.get_event_loop()
+                full_answer = ""
+                for chunk in await loop.run_in_executor(
+                    None, lambda: list(self.llm.stream(prompt))
+                ):
+                    if hasattr(chunk, "content"):
+                        token = chunk.content
+                    else:
+                        token = str(chunk)
+                    full_answer += token
+                    yield {"event": "token", "token": token}
+            else:
+                # Fall back to non-streaming
+                if hasattr(self.llm, "ainvoke"):
+                    llm_result = await self.llm.ainvoke(prompt)
+                else:
+                    loop = asyncio.get_event_loop()
+                    llm_result = await loop.run_in_executor(
+                        None, lambda: self.llm.invoke(prompt)
+                    )
+                if hasattr(llm_result, "content"):
+                    full_answer = llm_result.content
+                else:
+                    full_answer = str(llm_result)
+                yield {"event": "token", "token": full_answer}
+
+            yield {
+                "event": "done",
+                "answer": full_answer,
+                "sources": sources,
+            }
+
+        except Exception as e:
+            yield {
+                "event": "error",
+                "message": f"LLM error: {str(e)}",
+            }
